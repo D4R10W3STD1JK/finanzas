@@ -156,6 +156,7 @@ export function CategorySelect({
   onChange,
   allowEmpty = true,
   emptyLabel = "Sin categoría",
+  parentSuffix = "(general)",
 }: {
   id?: string;
   kind: CategoryKind;
@@ -163,6 +164,8 @@ export function CategorySelect({
   onChange: (id: number | null) => void;
   allowEmpty?: boolean;
   emptyLabel?: string;
+  /** Texto tras la categoría principal cuando tiene subcategorías. */
+  parentSuffix?: string;
 }) {
   const { data: categories = [] } = useCategories();
   const groups = useMemo(() => {
@@ -178,7 +181,9 @@ export function CategorySelect({
       {groups.map(({ parent, children }) =>
         children.length ? (
           <optgroup key={parent.id} label={parent.name}>
-            <option value={parent.id}>{parent.name} (general)</option>
+            <option value={parent.id}>
+              {parent.name} {parentSuffix}
+            </option>
             {children.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}

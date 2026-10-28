@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.deps import DB, current_user
-from app.api.routes import accounts, auth, categories, recurring, reports, transactions
+from app.api.routes import accounts, auth, budgets, categories, recurring, reports, transactions
 from app.config import get_settings
 from app.db import SessionLocal
 from app.services.bootstrap import bootstrap, run_jobs
@@ -91,7 +91,7 @@ def health(db: DB):
 
 api.include_router(auth.router)
 protected = [Depends(current_user)]
-for module in (accounts, categories, transactions, recurring, reports):
+for module in (accounts, categories, transactions, recurring, reports, budgets):
     api.include_router(module.router, dependencies=protected)
 api.include_router(reports.settings_router, dependencies=protected)
 app.include_router(api)

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.domain.recurrence import LAST_DAY, clamp_day
 from app.models import (
     Account,
+    GoalMode,
     AccountType,
     AmountMode,
     BusinessDayAdjust,
@@ -20,9 +21,10 @@ from app.models import (
     Transaction,
     TransactionKind,
 )
+from app.schemas.budgets import BudgetIn, BudgetOverrideIn, ContributionIn, GoalIn
 from app.schemas.core import TransactionIn
 from app.schemas.recurring import ConfirmIn, NewVersionIn, SeriesIn, VersionTerms
-from app.services import recurring, transactions
+from app.services import budgets, recurring, transactions
 from app.services.recurring import get_series
 
 
@@ -150,3 +152,16 @@ def seed_demo(db: Session, today: date, force: bool = False) -> None:
                 account_id=bank, to_account_id=card,
             ))
     db.commit()
+
+    # Presupuestos y objetivos de ahorro.
+    year_start = _months_ago(today, 12)
+    for name, amount in (("Alimentación", "450"), ("Ocio", "150"), ("Transporte", "120"), ("Restaurantes", "80")):
+        b = budgets.create_budget(db, BudgetIn(category_id=cats[name], amount=Decimal(amount), start_month=year_start), today)
+        if name == "Ocio":
+            budgets.set_override(db, b.id, BudgetOverrideIn(month=today.replace(month=8, day=1), amount=Decimal("400")))
+    budgets.create_goal(db, GoalIn(name="Colchón de seguridad", target_amount=Decimal("10000"), mode=GoalMode.ACCOUNT,
+                                   account_id=savings, icon="shield", color="#3b82f6"))
+    viaje = budgets.create_goal(db, GoalIn(name="Viaje a Asturias", target_amount=Decimal("1500"), mode=GoalMode.MANUAL,
+                                           target_date=_months_ago(today, -8, 1), icon="plane", color="#f97316"))
+    for months, amount in ((3, "150"), (2, "200"), (1, "150")):
+        budgets.add_contribution(db, viaje.id, ContributionIn(date=_months_ago(today, months, 5), amount=Decimal(amount)))

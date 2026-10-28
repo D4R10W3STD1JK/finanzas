@@ -8,7 +8,9 @@ import { PageLoader } from "./components/ui";
 import Layout from "./components/Layout";
 import "./index.css";
 import AccountsPage from "./pages/Accounts";
+import BudgetsPage from "./pages/Budgets";
 import CategoriesPage from "./pages/Categories";
+import GoalsPage from "./pages/Goals";
 import FixedCostsPage from "./pages/FixedCosts";
 import ForecastPage from "./pages/Forecast";
 import ProvisionsPage from "./pages/Provisions";
@@ -51,6 +53,8 @@ function App() {
         <Route path="recurrentes/:id" element={<SeriesDetailPage />} />
         <Route path="prevision" element={<ForecastPage />} />
         <Route path="provisiones" element={<ProvisionsPage />} />
+        <Route path="presupuestos" element={<BudgetsPage />} />
+        <Route path="objetivos" element={<GoalsPage />} />
         <Route path="gastos-fijos" element={<FixedCostsPage />} />
         <Route path="suscripciones" element={<SubscriptionsPage />} />
         <Route path="cuentas" element={<AccountsPage />} />

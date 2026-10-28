@@ -67,6 +67,15 @@ docker compose down -v && docker compose up -d
   - Para cada gasto que no es mensual (trimestral, semestral, anual…) calcula cuánto deberías llevar apartado hoy y cuánto apartar al mes para llegar al próximo pago.
   - La hucha empieza a llenarse en el último pago o, si empezaste a seguir el gasto después, en ese momento. Nunca se supone que había dinero apartado antes de usar la app.
   - Es un cálculo teórico: no mueve dinero.
+- **Presupuestos:**
+  - Cada categoría de gasto tiene un límite mensual, el mismo todos los meses. Si es una categoría principal, incluye sus subcategorías.
+  - Se puede poner un importe distinto en un mes concreto (por ejemplo, más ocio en agosto).
+  - La barra cambia de color al llegar al porcentaje de aviso (80 % por defecto) y al superarse. Una marca indica el día del mes en que estamos.
+  - La parte clara de la barra es lo que ya está previsto por recurrentes, con aviso si al sumarlo se superaría el límite.
+  - Se muestra el gasto en categorías sin presupuesto, con un botón para crearlo. Los presupuestos que necesitan atención aparecen en Inicio.
+- **Objetivos de ahorro:**
+  - Cada objetivo tiene un importe y una fecha opcional. El progreso sale del **saldo de una cuenta vinculada** o de **aportaciones apuntadas a mano** (también retiradas), a elegir en cada objetivo.
+  - Muestra cuánto hay que ahorrar al mes para llegar a tiempo, el ritmo de los últimos 3 meses y si vas bien o por detrás.
 - **Gastos fijos:** cada recurrente convertido a su coste mensual y anual, sea cual sea su frecuencia. En los recibos variables se usa la media real de los últimos 12 meses.
 - **Suscripciones:** coste mensual y anual, próxima renovación (resaltada si faltan 7 días o menos) y lo pagado en el último año. Un recurrente aparece aquí al marcar «Es una suscripción».
 

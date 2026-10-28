@@ -546,6 +546,169 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Budgets */
+        get: operations["list_budgets_api_budgets_get"];
+        put?: never;
+        /** Create Budget */
+        post: operations["create_budget_api_budgets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budgets/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Budget Status
+         * @description Gasto frente a presupuesto de un mes (por defecto el actual).
+         */
+        get: operations["budget_status_api_budgets_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budgets/{budget_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Budget */
+        delete: operations["delete_budget_api_budgets__budget_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Budget */
+        patch: operations["update_budget_api_budgets__budget_id__patch"];
+        trace?: never;
+    };
+    "/api/budgets/{budget_id}/overrides": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Override
+         * @description Importe distinto para un mes concreto.
+         */
+        put: operations["set_override_api_budgets__budget_id__overrides_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/budgets/{budget_id}/overrides/{month}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Override */
+        delete: operations["delete_override_api_budgets__budget_id__overrides__month__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/goals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Goals */
+        get: operations["list_goals_api_goals_get"];
+        put?: never;
+        /** Create Goal */
+        post: operations["create_goal_api_goals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/goals/{goal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Goal */
+        put: operations["update_goal_api_goals__goal_id__put"];
+        post?: never;
+        /** Delete Goal */
+        delete: operations["delete_goal_api_goals__goal_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/goals/{goal_id}/contributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Contribution */
+        post: operations["add_contribution_api_goals__goal_id__contributions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/goals/{goal_id}/contributions/{contribution_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Contribution */
+        delete: operations["delete_contribution_api_goals__goal_id__contributions__contribution_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -743,6 +906,124 @@ export interface components {
             /** File */
             file: string;
         };
+        /** BudgetIn */
+        BudgetIn: {
+            /** Category Id */
+            category_id: number;
+            /** Amount */
+            amount: number | string;
+            /**
+             * Alert Pct
+             * @default 80
+             */
+            alert_pct: number;
+            /** Start Month */
+            start_month?: string | null;
+        };
+        /** BudgetMonthOut */
+        BudgetMonthOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Is Current Month */
+            is_current_month: boolean;
+            /** Month Elapsed Pct */
+            month_elapsed_pct: string;
+            /** Items */
+            items: components["schemas"]["BudgetStatusOut"][];
+            /** Total Limit */
+            total_limit: string;
+            /** Total Spent */
+            total_spent: string;
+            /** Total Committed */
+            total_committed: string;
+            /** Unbudgeted */
+            unbudgeted: components["schemas"]["UnbudgetedOut"][];
+            /** Unbudgeted Total */
+            unbudgeted_total: string;
+        };
+        /** BudgetOut */
+        BudgetOut: {
+            /** Id */
+            id: number;
+            /** Category Id */
+            category_id: number;
+            /** Amount */
+            amount: string;
+            /** Alert Pct */
+            alert_pct: number;
+            /**
+             * Start Month
+             * Format: date
+             */
+            start_month: string;
+            /** Overrides */
+            overrides: components["schemas"]["BudgetOverrideOut"][];
+        };
+        /** BudgetOverrideIn */
+        BudgetOverrideIn: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: number | string;
+        };
+        /** BudgetOverrideOut */
+        BudgetOverrideOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Amount */
+            amount: string;
+        };
+        /** BudgetPatch */
+        BudgetPatch: {
+            /** Amount */
+            amount?: number | string | null;
+            /** Alert Pct */
+            alert_pct?: number | null;
+        };
+        /** BudgetStatusOut */
+        BudgetStatusOut: {
+            /** Budget Id */
+            budget_id: number;
+            /** Category Id */
+            category_id: number;
+            /** Name */
+            name: string;
+            /** Icon */
+            icon: string;
+            /** Color */
+            color: string;
+            /** Is Subcategory */
+            is_subcategory: boolean;
+            /** Limit */
+            limit: string;
+            /** Base Amount */
+            base_amount: string;
+            /** Is Override */
+            is_override: boolean;
+            /** Alert Pct */
+            alert_pct: number;
+            /** Spent */
+            spent: string;
+            /** Committed */
+            committed: string;
+            /** Remaining */
+            remaining: string;
+            /** Pct */
+            pct: string;
+            /** Status */
+            status: string;
+            /** Will Exceed */
+            will_exceed: boolean;
+        };
         /**
          * BusinessDayAdjust
          * @enum {string}
@@ -859,6 +1140,32 @@ export interface components {
             category_id?: number | null;
             /** Notes */
             notes?: string | null;
+        };
+        /** ContributionIn */
+        ContributionIn: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: number | string;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ContributionOut */
+        ContributionOut: {
+            /** Id */
+            id: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: string;
+            /** Notes */
+            notes: string | null;
         };
         /** CostTotalOut */
         CostTotalOut: {
@@ -995,6 +1302,83 @@ export interface components {
          * @enum {string}
          */
         Frequency: "daily" | "weekly" | "monthly" | "quarterly" | "semiannual" | "yearly" | "custom";
+        /** GoalIn */
+        GoalIn: {
+            /** Name */
+            name: string;
+            /** Target Amount */
+            target_amount: number | string;
+            /** Target Date */
+            target_date?: string | null;
+            mode: components["schemas"]["GoalMode"];
+            /** Account Id */
+            account_id?: number | null;
+            /**
+             * Icon
+             * @default piggy-bank
+             */
+            icon: string;
+            /**
+             * Color
+             * @default #10b981
+             */
+            color: string;
+            /**
+             * Archived
+             * @default false
+             */
+            archived: boolean;
+            /** Notes */
+            notes?: string | null;
+        };
+        /**
+         * GoalMode
+         * @enum {string}
+         */
+        GoalMode: "account" | "manual";
+        /** GoalOut */
+        GoalOut: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Target Amount */
+            target_amount: string;
+            /** Target Date */
+            target_date: string | null;
+            mode: components["schemas"]["GoalMode"];
+            /** Account Id */
+            account_id: number | null;
+            /** Icon */
+            icon: string;
+            /** Color */
+            color: string;
+            /** Archived */
+            archived: boolean;
+            /** Notes */
+            notes: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Current */
+            current: string;
+            /** Remaining */
+            remaining: string;
+            /** Pct */
+            pct: string;
+            /** Status */
+            status: string;
+            /** Days Left */
+            days_left: number | null;
+            /** Monthly Needed */
+            monthly_needed: string | null;
+            /** Monthly Pace */
+            monthly_pace: string | null;
+            /** Contributions */
+            contributions: components["schemas"]["ContributionOut"][];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -1434,6 +1818,15 @@ export interface components {
             sum_income: string;
             /** Sum Expense */
             sum_expense: string;
+        };
+        /** UnbudgetedOut */
+        UnbudgetedOut: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
         };
         /**
          * Unit
@@ -3005,6 +3398,451 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProvisionsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_budgets_api_budgets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_budget_api_budgets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    budget_status_api_budgets_status_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetMonthOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_budget_api_budgets__budget_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_budget_api_budgets__budget_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_override_api_budgets__budget_id__overrides_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetOverrideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_override_api_budgets__budget_id__overrides__month__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                budget_id: number;
+                month: string;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BudgetOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_goals_api_goals_get: {
+        parameters: {
+            query?: {
+                include_archived?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_goal_api_goals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_goal_api_goals__goal_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GoalIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_goal_api_goals__goal_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_contribution_api_goals__goal_id__contributions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContributionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_contribution_api_goals__goal_id__contributions__contribution_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                goal_id: number;
+                contribution_id: number;
+            };
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GoalOut"];
                 };
             };
             /** @description Validation Error */

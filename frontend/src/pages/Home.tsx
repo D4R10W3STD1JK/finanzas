@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { ArrowDownRight, ArrowUpRight, CalendarCheck, TriangleAlert, ChartColumn, ChevronLeft, ChevronRight, CircleAlert, Plus, Table } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
-import { useAccounts, useDashboard, useForecast, useOccurrences } from "../api/hooks";
+import { useAccounts, useBudgetMonth, useDashboard, useForecast, useOccurrences } from "../api/hooks";
 import type { Flow } from "../api/types";
 import { Balance } from "../components/amount";
 import { CategoryDonut, EvolutionLegend, EvolutionTable, MonthlyEvolutionChart, toSlices, useToggle } from "../components/charts";
@@ -12,6 +12,7 @@ import { EmptyState, PageHeader, PageLoader } from "../components/ui";
 import { useChartTheme } from "../lib/chartTheme";
 import { addDays, formatDate, formatMoney, formatMonth, monthRange, todayISO } from "../lib/format";
 import { ACCOUNT_TYPES } from "../lib/labels";
+import { BudgetMeter } from "./Budgets";
 import TransactionForm from "./TransactionForm";
 
 const pct = (v: string | number | null | undefined) =>
@@ -86,6 +87,7 @@ export default function HomePage() {
   const pending = useOccurrences({ status: ["planned"], date_to: addDays(today, -1) });
   const upcoming = useOccurrences({ status: ["planned"], date_from: today, date_to: addDays(today, 30) });
   const forecast = useForecast(3);
+  const budgets = useBudgetMonth(offset === 0 ? undefined : month);
   const [creating, setCreating] = useState(false);
   const [activeSlice, setActiveSlice] = useState<string | null>(null);
   const [showTable, toggleTable] = useToggle();
@@ -167,6 +169,37 @@ export default function HomePage() {
             {formatMoney(forecast.data.threshold)}. Ver previsión
           </span>
         </Link>
+      )}
+
+      {budgets.data && budgets.data.items.some((b) => b.status !== "ok") && (
+        <section className="mt-6 card p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 font-semibold">
+              <CircleAlert className="size-4.5 text-amber-500" aria-hidden /> Presupuestos que necesitan atención
+            </h2>
+            <Link to="/presupuestos" className="text-sm text-brand-600 hover:underline dark:text-brand-500">
+              Ver todos
+            </Link>
+          </div>
+          <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+            {budgets.data.items
+              .filter((b) => b.status !== "ok")
+              .map((b) => (
+                <li key={b.budget_id}>
+                  <div className="mb-1 flex justify-between gap-2 text-sm">
+                    <span className="truncate">{b.name}</span>
+                    <span className="amount text-slate-500 dark:text-slate-400">
+                      {formatMoney(b.spent)} / {formatMoney(b.limit)}
+                    </span>
+                  </div>
+                  <BudgetMeter item={b} elapsedPct={budgets.data.is_current_month ? Number(budgets.data.month_elapsed_pct) : undefined} />
+                  <p className={`mt-0.5 text-xs ${b.status === "over" ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>
+                    {b.status === "over" ? `Superado en ${formatMoney(-Number(b.remaining))}` : `${Number(b.pct).toLocaleString("es-ES")} % gastado · quedan ${formatMoney(b.remaining)}`}
+                  </p>
+                </li>
+              ))}
+          </ul>
+        </section>
       )}
 
       {(pending.data?.length ?? 0) > 0 && (

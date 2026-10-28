@@ -10,6 +10,7 @@ __all__ = [
     "BusinessDayAdjust",
     "CategoryKind",
     "Frequency",
+    "GoalMode",
     "OccurrenceStatus",
     "TransactionKind",
     "Unit",
@@ -47,6 +48,13 @@ class OccurrenceStatus(StrEnum):
     PLANNED = "planned"
     CONFIRMED = "confirmed"
     SKIPPED = "skipped"
+
+
+class GoalMode(StrEnum):
+    # El progreso es el saldo de una cuenta (p. ej. una cuenta de ahorro dedicada).
+    ACCOUNT = "account"
+    # El progreso es la suma de las aportaciones apuntadas a mano.
+    MANUAL = "manual"
 
 
 def str_enum(enum_cls: type[StrEnum]) -> Enum:

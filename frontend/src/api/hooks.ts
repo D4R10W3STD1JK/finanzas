@@ -82,6 +82,21 @@ export const useProvisions = () =>
 export const useAppSettings = () =>
   useQuery({ queryKey: ["settings"], queryFn: () => unwrap(api.GET("/api/settings")) });
 
+export const useBudgetMonth = (month?: string) =>
+  useQuery({
+    queryKey: ["budgets", "status", month ?? "actual"],
+    queryFn: () => unwrap(api.GET("/api/budgets/status", { params: { query: { month } } })),
+    placeholderData: keepPreviousData,
+  });
+
+export const useBudgets = () => useQuery({ queryKey: ["budgets", "list"], queryFn: () => unwrap(api.GET("/api/budgets")) });
+
+export const useGoals = (includeArchived = false) =>
+  useQuery({
+    queryKey: ["goals", includeArchived],
+    queryFn: () => unwrap(api.GET("/api/goals", { params: { query: { include_archived: includeArchived } } })),
+  });
+
 // --- Escrituras ---
 
 /** Casi todo afecta a los saldos: tras cada cambio se refresca todo salvo la sesión. */
@@ -224,3 +239,44 @@ export const useOccurrenceAction = () =>
         return unwrap(api.POST("/api/occurrences/{occ_id}/reset", params));
     }
   });
+
+export const useSaveBudget = () =>
+  useApiMutation(({ id, body }: { id?: number; body: S["BudgetIn"] }) =>
+    id
+      ? unwrap(api.PATCH("/api/budgets/{budget_id}", { params: { path: { budget_id: id } }, body: { amount: body.amount, alert_pct: body.alert_pct } }))
+      : unwrap(api.POST("/api/budgets", { body })),
+  );
+
+export const useDeleteBudget = () =>
+  useApiMutation((id: number) => unwrap(api.DELETE("/api/budgets/{budget_id}", { params: { path: { budget_id: id } } })));
+
+export const useSetBudgetOverride = () =>
+  useApiMutation(({ id, month, amount }: { id: number; month: string; amount: string | null }) =>
+    amount === null
+      ? unwrap(api.DELETE("/api/budgets/{budget_id}/overrides/{month}", { params: { path: { budget_id: id, month } } }))
+      : unwrap(api.PUT("/api/budgets/{budget_id}/overrides", { params: { path: { budget_id: id } }, body: { month, amount } })),
+  );
+
+export const useSaveGoal = () =>
+  useApiMutation(({ id, body }: { id?: number; body: S["GoalIn"] }) =>
+    id
+      ? unwrap(api.PUT("/api/goals/{goal_id}", { params: { path: { goal_id: id } }, body }))
+      : unwrap(api.POST("/api/goals", { body })),
+  );
+
+export const useDeleteGoal = () =>
+  useApiMutation((id: number) => unwrap(api.DELETE("/api/goals/{goal_id}", { params: { path: { goal_id: id } } })));
+
+export const useAddContribution = () =>
+  useApiMutation(({ id, body }: { id: number; body: S["ContributionIn"] }) =>
+    unwrap(api.POST("/api/goals/{goal_id}/contributions", { params: { path: { goal_id: id } }, body })),
+  );
+
+export const useDeleteContribution = () =>
+  useApiMutation(({ id, contributionId }: { id: number; contributionId: number }) =>
+    unwrap(
+      api.DELETE("/api/goals/{goal_id}/contributions/{contribution_id}", {
+        params: { path: { goal_id: id, contribution_id: contributionId } },
+      }),
+    ),
+  );

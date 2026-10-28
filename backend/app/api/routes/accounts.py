@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from sqlalchemy import exists, or_, select
 
 from app.api.deps import DB, Today
-from app.models import Account, RecurringVersion, Transaction
+from app.models import Account, RecurringVersion, SavingsGoal, Transaction
 from app.schemas.core import AccountIn, AccountOut, AccountPatch, ReconcileIn, TransactionOut
 from app.services.balances import account_balances
 from app.services.errors import Conflict, get_or_404
@@ -68,6 +68,8 @@ def delete_account(account_id: int, db: DB):
     )
     if used:
         raise Conflict("La cuenta tiene movimientos o recurrentes. Puedes archivarla en lugar de borrarla.")
+    if db.scalar(select(exists().where(SavingsGoal.account_id == account_id))):
+        raise Conflict("La cuenta está vinculada a un objetivo de ahorro. Cambia el objetivo antes de borrarla.")
     db.delete(account)
     db.commit()
 
