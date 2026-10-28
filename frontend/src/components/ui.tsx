@@ -99,7 +99,7 @@ export function Segmented<T extends string>({
           type="button"
           onClick={() => onChange(o.value)}
           className={clsx(
-            "flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+            "flex-1 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
             value === o.value
               ? clsx("bg-white shadow-sm dark:bg-slate-700", o.className)
               : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",

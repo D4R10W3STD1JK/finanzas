@@ -9,6 +9,10 @@ import Layout from "./components/Layout";
 import "./index.css";
 import AccountsPage from "./pages/Accounts";
 import CategoriesPage from "./pages/Categories";
+import FixedCostsPage from "./pages/FixedCosts";
+import ForecastPage from "./pages/Forecast";
+import ProvisionsPage from "./pages/Provisions";
+import SubscriptionsPage from "./pages/Subscriptions";
 import HomePage from "./pages/Home";
 import LoginPage from "./pages/Login";
 import RecurringPage from "./pages/Recurring";
@@ -45,6 +49,10 @@ function App() {
         <Route path="movimientos" element={<TransactionsPage />} />
         <Route path="recurrentes" element={<RecurringPage />} />
         <Route path="recurrentes/:id" element={<SeriesDetailPage />} />
+        <Route path="prevision" element={<ForecastPage />} />
+        <Route path="provisiones" element={<ProvisionsPage />} />
+        <Route path="gastos-fijos" element={<FixedCostsPage />} />
+        <Route path="suscripciones" element={<SubscriptionsPage />} />
         <Route path="cuentas" element={<AccountsPage />} />
         <Route path="categorias" element={<CategoriesPage />} />
         <Route path="ajustes" element={<SettingsPage />} />

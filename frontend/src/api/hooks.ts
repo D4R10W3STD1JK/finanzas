@@ -58,6 +58,30 @@ export const useOccurrences = (filters: OccurrenceFilters) =>
     queryFn: () => unwrap(api.GET("/api/occurrences", { params: { query: filters } })),
   });
 
+export const useDashboard = (month?: string) =>
+  useQuery({
+    queryKey: ["dashboard", month ?? "actual"],
+    queryFn: () => unwrap(api.GET("/api/reports/dashboard", { params: { query: { month } } })),
+    placeholderData: keepPreviousData,
+  });
+
+export const useRecurringCosts = () =>
+  useQuery({ queryKey: ["recurring-costs"], queryFn: () => unwrap(api.GET("/api/reports/recurring-costs")) });
+
+export const useForecast = (months: 3 | 6 | 12, includeVariable?: boolean) =>
+  useQuery({
+    queryKey: ["forecast", months, includeVariable ?? "pref"],
+    queryFn: () =>
+      unwrap(api.GET("/api/reports/forecast", { params: { query: { months, include_variable: includeVariable } } })),
+    placeholderData: keepPreviousData,
+  });
+
+export const useProvisions = () =>
+  useQuery({ queryKey: ["provisions"], queryFn: () => unwrap(api.GET("/api/reports/provisions")) });
+
+export const useAppSettings = () =>
+  useQuery({ queryKey: ["settings"], queryFn: () => unwrap(api.GET("/api/settings")) });
+
 // --- Escrituras ---
 
 /** Casi todo afecta a los saldos: tras cada cambio se refresca todo salvo la sesión. */
@@ -95,6 +119,9 @@ export const useLogout = () => {
 
 export const useChangePassword = () =>
   useMutation({ mutationFn: (body: S["ChangePasswordIn"]) => unwrap(api.POST("/api/auth/change-password", { body })) });
+
+export const useSaveSettings = () =>
+  useApiMutation((body: S["AppSettings-Input"]) => unwrap(api.PUT("/api/settings", { body })));
 
 export const useSaveAccount = () =>
   useApiMutation(({ id, body }: { id?: number; body: S["AccountIn"] }) =>

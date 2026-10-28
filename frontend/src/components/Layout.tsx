@@ -6,6 +6,10 @@ import {
   LogOut,
   Menu,
   Monitor,
+  PiggyBank,
+  ChartSpline,
+  Receipt,
+  Repeat,
   Moon,
   Settings,
   Shapes,
@@ -22,13 +26,17 @@ const NAV = [
   { to: "/", label: "Inicio", icon: House, end: true },
   { to: "/movimientos", label: "Movimientos", icon: ArrowLeftRight },
   { to: "/recurrentes", label: "Recurrentes", icon: CalendarClock },
+  { to: "/prevision", label: "Previsión", icon: ChartSpline },
+  { to: "/provisiones", label: "Provisiones", icon: PiggyBank },
+  { to: "/gastos-fijos", label: "Gastos fijos", icon: Receipt },
+  { to: "/suscripciones", label: "Suscripciones", icon: Repeat },
   { to: "/cuentas", label: "Cuentas", icon: Wallet },
   { to: "/categorias", label: "Categorías", icon: Shapes },
   { to: "/ajustes", label: "Ajustes", icon: Settings },
 ];
 
-// En el móvil, la barra inferior muestra las 4 primeras; el resto va en el menú.
-const MOBILE_TABS = NAV.slice(0, 4);
+// En el móvil, la barra inferior muestra 4 secciones; el resto va en el menú.
+const MOBILE_TABS = NAV.filter((n) => ["/", "/movimientos", "/recurrentes", "/cuentas"].includes(n.to));
 
 const THEMES: { value: Theme; icon: typeof Sun; label: string }[] = [
   { value: "light", icon: Sun, label: "Claro" },

@@ -52,6 +52,26 @@ Carga 4 cuentas, 14 recurrentes y un año de movimientos. Para volver a empezar 
 docker compose down -v && docker compose up -d
 ```
 
+## Uso: pantallas
+
+- **Inicio:**
+  - Saldo total, y los ingresos, gastos y ahorro del mes, comparados con el mes anterior y con la media de los 12 meses anteriores (solo cuenta los meses con datos).
+  - Tasa de ahorro, gastos por categoría y evolución de los últimos 12 meses, con vista de tabla.
+  - Pendientes de confirmar y próximos 30 días.
+  - Con las flechas se consulta cualquier mes. Al pulsar una categoría se abren sus movimientos de ese mes.
+- **Previsión:**
+  - Proyecta el saldo a 3, 6 o 12 meses a partir del saldo real de hoy. Suma los recurrentes previstos, los vencidos sin confirmar y los movimientos apuntados con fecha futura.
+  - Opcionalmente añade el gasto no recurrente habitual: la media de los últimos 6 meses completos, repartida por días. Sin historial cuenta como 0.
+  - Avisa cuando el saldo total bajaría del umbral, que por defecto es 0 € y se cambia en Ajustes o en la propia pantalla. También avisa cuando una cuenta se quedaría en negativo o una tarjeta superaría su límite. El aviso aparece además en Inicio.
+- **Provisiones (hucha virtual):**
+  - Para cada gasto que no es mensual (trimestral, semestral, anual…) calcula cuánto deberías llevar apartado hoy y cuánto apartar al mes para llegar al próximo pago.
+  - La hucha empieza a llenarse en el último pago o, si empezaste a seguir el gasto después, en ese momento. Nunca se supone que había dinero apartado antes de usar la app.
+  - Es un cálculo teórico: no mueve dinero.
+- **Gastos fijos:** cada recurrente convertido a su coste mensual y anual, sea cual sea su frecuencia. En los recibos variables se usa la media real de los últimos 12 meses.
+- **Suscripciones:** coste mensual y anual, próxima renovación (resaltada si faltan 7 días o menos) y lo pagado en el último año. Un recurrente aparece aquí al marcar «Es una suscripción».
+
+Las transferencias y los ajustes de saldo nunca cuentan como ingreso ni como gasto.
+
 ## Uso: recurrentes
 
 - **Frecuencias:** diaria, semanal, mensual, trimestral, semestral, anual o personalizada ("cada N días, semanas o meses").

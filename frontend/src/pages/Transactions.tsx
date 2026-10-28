@@ -12,16 +12,24 @@ import { formatDateShort, formatMoney, formatMonth, monthRange, todayISO } from 
 import TransactionForm from "./TransactionForm";
 
 const PAGE = 100;
+
+function monthsFromToday(month: string | null): number {
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) return 0;
+  const [y, m] = month.split("-").map(Number);
+  const now = new Date();
+  return (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth());
+}
 const MAX_LIMIT = 500; // máximo que acepta la API por petición
 
 export default function TransactionsPage() {
   const [params, setParams] = useSearchParams();
   const accountId = params.get("cuenta") ? Number(params.get("cuenta")) : null;
-  const [monthOffset, setMonthOffset] = useState(0);
+  // Enlaces desde el dashboard: ?mes=2026-10&categoria=5&tipo=expense
+  const [monthOffset, setMonthOffset] = useState(() => monthsFromToday(params.get("mes")));
   const [showFilters, setShowFilters] = useState(false);
   const [q, setQ] = useState("");
-  const [kind, setKind] = useState<TransactionKind | "">("");
-  const [categoryId, setCategoryId] = useState<number | null>(null);
+  const [kind, setKind] = useState<TransactionKind | "">(() => (params.get("tipo") as TransactionKind | null) ?? "");
+  const [categoryId, setCategoryId] = useState<number | null>(() => (params.get("categoria") ? Number(params.get("categoria")) : null));
   const [tagId, setTagId] = useState<number | null>(null);
   const [rangeFrom, setRangeFrom] = useState("");
   const [rangeTo, setRangeTo] = useState("");

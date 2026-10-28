@@ -10,9 +10,11 @@ from app.models.enums import (
     Unit,
 )
 from app.models.recurring import Occurrence, RecurringSeries, RecurringVersion, recurring_version_tags
+from app.models.settings import AppSetting
 
 __all__ = [
     "Account",
+    "AppSetting",
     "AccountType",
     "AmountMode",
     "Attachment",

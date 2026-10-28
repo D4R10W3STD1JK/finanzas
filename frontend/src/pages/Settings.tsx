@@ -1,9 +1,9 @@
 import { Check, Pencil, Trash } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { useChangePassword, useDeleteTag, useMe, useSaveTag, useTags } from "../api/hooks";
+import { useAppSettings, useChangePassword, useDeleteTag, useMe, useSaveSettings, useSaveTag, useTags } from "../api/hooks";
 import type { Tag } from "../api/types";
-import { ColorPicker } from "../components/inputs";
-import { ConfirmDialog, ErrorBox, Field, Modal, PageHeader, Spinner } from "../components/ui";
+import { ColorPicker, MoneyInput } from "../components/inputs";
+import { Checkbox, ConfirmDialog, ErrorBox, Field, Modal, PageHeader, Spinner } from "../components/ui";
 
 function PasswordCard() {
   const change = useChangePassword();
@@ -130,12 +130,49 @@ function TagsCard() {
   );
 }
 
+function ForecastSettingsCard() {
+  const { data } = useAppSettings();
+  const save = useSaveSettings();
+  const [threshold, setThreshold] = useState<string | null>(null);
+  if (!data) return null;
+  const value = threshold ?? data.low_balance_threshold;
+
+  return (
+    <div className="card space-y-4 p-4">
+      <h2 className="font-semibold">Previsión y avisos</h2>
+      <Field label="Avisar si el saldo total previsto baja de" hint="Con 0 € te avisa cuando la previsión se quedaría en negativo">
+        {(id) => <MoneyInput id={id} value={value} onChange={setThreshold} allowNegative />}
+      </Field>
+      <Checkbox
+        checked={data.forecast_include_variable}
+        onChange={(v) => save.mutate({ ...data, forecast_include_variable: v })}
+        label="Incluir en la previsión el gasto no recurrente habitual"
+        hint="La media de supermercado, gasolina, ocio… de los últimos meses"
+      />
+      <ErrorBox error={save.error} />
+      {save.isSuccess && threshold === null && (
+        <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
+          <Check className="size-4" /> Guardado
+        </p>
+      )}
+      <button
+        className="btn-primary"
+        disabled={threshold === null || threshold === "" || save.isPending}
+        onClick={() => save.mutate({ ...data, low_balance_threshold: threshold! }, { onSuccess: () => setThreshold(null) })}
+      >
+        Guardar umbral
+      </button>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { data: me } = useMe();
   return (
     <>
       <PageHeader title="Ajustes" subtitle={me ? `Sesión iniciada como ${me.username}` : undefined} />
       <div className="grid gap-6 lg:grid-cols-2">
+        <ForecastSettingsCard />
         <PasswordCard />
         <TagsCard />
       </div>

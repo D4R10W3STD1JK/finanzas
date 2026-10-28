@@ -466,6 +466,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard
+         * @description Resumen de un mes (por defecto el actual). `month` puede ser cualquier día de ese mes.
+         */
+        get: operations["dashboard_api_reports_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/recurring-costs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recurring Costs
+         * @description Coste mensual y anual equivalente de todos los recurrentes activos.
+         */
+        get: operations["recurring_costs_api_reports_recurring_costs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/forecast": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Forecast
+         * @description Proyección del saldo a 3, 6 o 12 meses. Sin `include_variable` se usa la preferencia guardada.
+         */
+        get: operations["forecast_api_reports_forecast_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/provisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Provisions
+         * @description Hucha virtual para los gastos trimestrales, semestrales, anuales...
+         */
+        get: operations["provisions_api_reports_provisions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Settings */
+        get: operations["read_settings_api_settings_get"];
+        /** Write Settings */
+        put: operations["write_settings_api_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -600,6 +698,20 @@ export interface components {
          * @enum {string}
          */
         AmountMode: "fixed" | "variable";
+        /** AppSettings */
+        "AppSettings-Input": {
+            /** Low Balance Threshold */
+            low_balance_threshold: number | string;
+            /** Forecast Include Variable */
+            forecast_include_variable: boolean;
+        };
+        /** AppSettings */
+        "AppSettings-Output": {
+            /** Low Balance Threshold */
+            low_balance_threshold: string;
+            /** Forecast Include Variable */
+            forecast_include_variable: boolean;
+        };
         /** AttachmentOut */
         AttachmentOut: {
             /** Id */
@@ -616,6 +728,16 @@ export interface components {
              */
             created_at: string;
         };
+        /** BalancePoint */
+        BalancePoint: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Balance */
+            balance: string;
+        };
         /** Body_upload_attachment_api_transactions__tx_id__attachments_post */
         Body_upload_attachment_api_transactions__tx_id__attachments_post: {
             /** File */
@@ -626,6 +748,32 @@ export interface components {
          * @enum {string}
          */
         BusinessDayAdjust: "none" | "previous" | "next";
+        /** CategoryChildOut */
+        CategoryChildOut: {
+            /** Category Id */
+            category_id: number;
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: string;
+        };
+        /** CategoryExpenseOut */
+        CategoryExpenseOut: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Icon */
+            icon: string;
+            /** Color */
+            color: string;
+            /** Amount */
+            amount: string;
+            /** Share */
+            share: string;
+            /** Children */
+            children: components["schemas"]["CategoryChildOut"][];
+        };
         /** CategoryIn */
         CategoryIn: {
             /** Name */
@@ -712,6 +860,136 @@ export interface components {
             /** Notes */
             notes?: string | null;
         };
+        /** CostTotalOut */
+        CostTotalOut: {
+            /** Monthly */
+            monthly: string;
+            /** Annual */
+            annual: string;
+            /** Count */
+            count: number;
+        };
+        /** DashboardOut */
+        DashboardOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Is Current Month */
+            is_current_month: boolean;
+            /** Total Balance */
+            total_balance: string;
+            current: components["schemas"]["FlowOut"];
+            previous: components["schemas"]["FlowOut"] | null;
+            average: components["schemas"]["FlowOut"] | null;
+            /** Average Months */
+            average_months: number;
+            last_12_months: components["schemas"]["FlowOut"];
+            /** Expenses By Category */
+            expenses_by_category: components["schemas"]["CategoryExpenseOut"][];
+            /** Evolution */
+            evolution: components["schemas"]["MonthFlowOut"][];
+            upcoming: components["schemas"]["UpcomingOut"];
+            /** Pending Count */
+            pending_count: number;
+        };
+        /** FlowOut */
+        FlowOut: {
+            /** Income */
+            income: string;
+            /** Expense */
+            expense: string;
+            /** Savings */
+            savings: string;
+            /** Savings Rate */
+            savings_rate: string | null;
+        };
+        /** ForecastAccountOut */
+        ForecastAccountOut: {
+            /** Account Id */
+            account_id: number;
+            /** Name */
+            name: string;
+            /** Type */
+            type: string;
+            /** Include In Total */
+            include_in_total: boolean;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+            /** Min */
+            min: string;
+            /**
+             * Min Date
+             * Format: date
+             */
+            min_date: string;
+            /** Floor */
+            floor: string | null;
+            /** Below Floor */
+            below_floor: boolean;
+        };
+        /** ForecastMonthOut */
+        ForecastMonthOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Start */
+            start: string;
+            /** Income */
+            income: string;
+            /** Expense */
+            expense: string;
+            /** Transfers */
+            transfers: string;
+            /** End */
+            end: string;
+            /** Min */
+            min: string;
+            /**
+             * Min Date
+             * Format: date
+             */
+            min_date: string;
+            /** Below Threshold */
+            below_threshold: boolean;
+        };
+        /** ForecastOut */
+        ForecastOut: {
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /**
+             * End Date
+             * Format: date
+             */
+            end_date: string;
+            /** Months */
+            months: number;
+            /** Threshold */
+            threshold: string;
+            /** Include Variable */
+            include_variable: boolean;
+            variable: components["schemas"]["VariableAverageOut"];
+            /** Start Balance */
+            start_balance: string;
+            /** End Balance */
+            end_balance: string;
+            lowest: components["schemas"]["BalancePoint"];
+            first_below_threshold: components["schemas"]["BalancePoint"] | null;
+            /** Points */
+            points: components["schemas"]["BalancePoint"][];
+            /** Monthly */
+            monthly: components["schemas"]["ForecastMonthOut"][];
+            /** Accounts */
+            accounts: components["schemas"]["ForecastAccountOut"][];
+        };
         /**
          * Frequency
          * @enum {string}
@@ -728,6 +1006,24 @@ export interface components {
             username: string;
             /** Password */
             password: string;
+        };
+        /** MonthFlowOut */
+        MonthFlowOut: {
+            /** Income */
+            income: string;
+            /** Expense */
+            expense: string;
+            /** Savings */
+            savings: string;
+            /** Savings Rate */
+            savings_rate: string | null;
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Has Data */
+            has_data: boolean;
         };
         /**
          * NewVersionIn
@@ -797,6 +1093,62 @@ export interface components {
          * @enum {string}
          */
         OccurrenceStatus: "planned" | "confirmed" | "skipped";
+        /** ProvisionOut */
+        ProvisionOut: {
+            /** Series Id */
+            series_id: number;
+            /** Name */
+            name: string;
+            frequency: components["schemas"]["Frequency"];
+            /** Interval */
+            interval: number;
+            unit: components["schemas"]["Unit"] | null;
+            /** Category Id */
+            category_id: number | null;
+            /** Amount */
+            amount: string;
+            /** Basis */
+            basis: string;
+            /**
+             * Due Date
+             * Format: date
+             */
+            due_date: string;
+            /** Days Left */
+            days_left: number;
+            /**
+             * Cycle Start
+             * Format: date
+             */
+            cycle_start: string;
+            /** Started Late */
+            started_late: boolean;
+            /** Accumulated */
+            accumulated: string;
+            /** Remaining */
+            remaining: string;
+            /** Progress */
+            progress: string;
+            /** Monthly To Go */
+            monthly_to_go: string;
+            /** Ideal Monthly */
+            ideal_monthly: string;
+        };
+        /** ProvisionsOut */
+        ProvisionsOut: {
+            /** Items */
+            items: components["schemas"]["ProvisionOut"][];
+            /** Needed */
+            needed: string;
+            /** Accumulated */
+            accumulated: string;
+            /** Progress */
+            progress: string;
+            /** Monthly To Go */
+            monthly_to_go: string;
+            /** Ideal Monthly */
+            ideal_monthly: string;
+        };
         /** ReconcileIn */
         ReconcileIn: {
             /** Real Balance */
@@ -808,6 +1160,56 @@ export interface components {
             date: string;
             /** Notes */
             notes?: string | null;
+        };
+        /** RecurringCostOut */
+        RecurringCostOut: {
+            /** Series Id */
+            series_id: number;
+            /** Name */
+            name: string;
+            kind: components["schemas"]["TransactionKind"];
+            /** Is Subscription */
+            is_subscription: boolean;
+            frequency: components["schemas"]["Frequency"];
+            /** Interval */
+            interval: number;
+            unit: components["schemas"]["Unit"] | null;
+            /** Day Of Month */
+            day_of_month: number | null;
+            /** Amount */
+            amount: string;
+            amount_mode: components["schemas"]["AmountMode"];
+            /** Basis */
+            basis: string;
+            /** Base Amount */
+            base_amount: string;
+            /** Monthly */
+            monthly: string;
+            /** Annual */
+            annual: string;
+            /** Category Id */
+            category_id: number | null;
+            /** Account Id */
+            account_id: number;
+            /** Next Due Date */
+            next_due_date: string | null;
+            /** Next Amount */
+            next_amount: string | null;
+            /** Last 12M Total */
+            last_12m_total: string;
+            /** Last 12M Count */
+            last_12m_count: number;
+        };
+        /** RecurringCostsOut */
+        RecurringCostsOut: {
+            /** Items */
+            items: components["schemas"]["RecurringCostOut"][];
+            income: components["schemas"]["CostTotalOut"];
+            expense: components["schemas"]["CostTotalOut"];
+            transfer: components["schemas"]["CostTotalOut"];
+            subscriptions: components["schemas"]["CostTotalOut"];
+            /** Net Monthly */
+            net_monthly: string;
         };
         /** SeriesDetail */
         SeriesDetail: {
@@ -1038,6 +1440,15 @@ export interface components {
          * @enum {string}
          */
         Unit: "day" | "week" | "month";
+        /** UpcomingOut */
+        UpcomingOut: {
+            /** Income */
+            income: string;
+            /** Expense */
+            expense: string;
+            /** Count */
+            count: number;
+        };
         /** UserOut */
         UserOut: {
             /** Id */
@@ -1057,6 +1468,15 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** VariableAverageOut */
+        VariableAverageOut: {
+            /** Income */
+            income: string;
+            /** Expense */
+            expense: string;
+            /** Months */
+            months: number;
         };
         /** VersionOut */
         VersionOut: {
@@ -2456,6 +2876,201 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OccurrenceOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_api_reports_dashboard_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recurring_costs_api_reports_recurring_costs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurringCostsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forecast_api_reports_forecast_get: {
+        parameters: {
+            query?: {
+                months?: number;
+                include_variable?: boolean | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ForecastOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    provisions_api_reports_provisions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvisionsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    read_settings_api_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppSettings-Output"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    write_settings_api_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppSettings-Input"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AppSettings-Output"];
                 };
             };
             /** @description Validation Error */
