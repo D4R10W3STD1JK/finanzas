@@ -1,0 +1,100 @@
+name: finanzas
+
+x-db-env: &db-env
+  POSTGRES_USER: ${POSTGRES_USER:-finanzas}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en .env}
+  POSTGRES_DB: ${POSTGRES_DB:-finanzas}
+
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-finanzas}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-finanzas}
+  SECRET_KEY: ${SECRET_KEY:?Define SECRET_KEY en .env}
+  ADMIN_USERNAME: ${ADMIN_USERNAME:-Ronald}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Define ADMIN_PASSWORD en .env}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  SESSION_DAYS: ${SESSION_DAYS:-30}
+  TIMEZONE: ${TZ:-Europe/Madrid}
+  HOLIDAYS_COUNTRY: ${HOLIDAYS_COUNTRY:-ES}
+  HOLIDAYS_SUBDIV: ${HOLIDAYS_SUBDIV:-VC}
+  OCCURRENCE_HORIZON_MONTHS: ${OCCURRENCE_HORIZON_MONTHS:-18}
+  MAX_ATTACHMENT_MB: ${MAX_ATTACHMENT_MB:-15}
+  TZ: ${TZ:-Europe/Madrid}
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      <<: *db-env
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    restart: unless-stopped
+    environment: *backend-env
+    volumes:
+      - attachments:/data/attachments
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  backup:
+    build: ./backup
+    restart: unless-stopped
+    environment:
+      <<: *db-env
+      PGHOST: db
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_MIN_KEEP: ${BACKUP_MIN_KEEP:-7}
+      TZ: ${TZ:-Europe/Madrid}
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+      - attachments:/data/attachments:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Tests del backend contra un Postgres real:
+  #   docker compose --profile test run --rm tests
+  tests:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      target: test
+    environment:
+      <<: *backend-env
+      TEST_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-finanzas}:${POSTGRES_PASSWORD}@db:5432/finanzas_test
+      JOBS_ENABLED: "false"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  attachments:
