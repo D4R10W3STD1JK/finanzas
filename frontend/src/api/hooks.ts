@@ -115,8 +115,9 @@ export const useLogin = () => {
   return useMutation({
     mutationFn: (body: S["LoginIn"]) => unwrap(api.POST("/api/auth/login", { body })),
     onSuccess: (user) => {
-      qc.clear();
+      // No usar qc.clear(): borraría la consulta ["me"] que observa <App> y la pantalla no cambiaría.
       qc.setQueryData(["me"], user);
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
     },
   });
 };
@@ -126,8 +127,8 @@ export const useLogout = () => {
   return useMutation({
     mutationFn: () => unwrap(api.POST("/api/auth/logout")),
     onSettled: () => {
-      qc.clear();
       qc.setQueryData(["me"], null);
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
     },
   });
 };

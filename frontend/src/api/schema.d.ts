@@ -709,6 +709,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/data/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export
+         * @description Descarga todos los datos en un fichero JSON.
+         */
+        get: operations["export_api_data_export_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/data/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import
+         * @description Sustituye todos los datos por los del fichero. Con `dry_run=true` solo lo comprueba.
+         */
+        post: operations["import__api_data_import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings": {
         parameters: {
             query?: never;
@@ -900,6 +940,11 @@ export interface components {
             date: string;
             /** Balance */
             balance: string;
+        };
+        /** Body_import__api_data_import_post */
+        Body_import__api_data_import_post: {
+            /** File */
+            file: string;
         };
         /** Body_upload_attachment_api_transactions__tx_id__attachments_post */
         Body_upload_attachment_api_transactions__tx_id__attachments_post: {
@@ -3843,6 +3888,76 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GoalOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_data_export_get: {
+        parameters: {
+            query?: {
+                include_attachments?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    import__api_data_import_post: {
+        parameters: {
+            query?: {
+                dry_run?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                finanzas_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_import__api_data_import_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */

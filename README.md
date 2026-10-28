@@ -6,47 +6,61 @@ Aplicación web de finanzas personales, autoalojada y para un solo usuario. Gest
 - **Frontend:** React 19, Vite, TypeScript, Tailwind 4 y TanStack Query, servido con nginx.
 - **Copias de seguridad:** un contenedor propio con `pg_dump` y los adjuntos.
 
-## Instalación
+## Instalación en el PC
 
-### Requisitos
+La app se ejecuta en el propio PC con Docker y se usa desde el navegador, en ese PC o en cualquier móvil o tablet de la misma wifi. No necesita internet salvo para instalarla y actualizarla.
 
-- Un equipo x86-64 con **Docker** y **Docker Compose v2**:
-  - **Linux:** Docker Engine con el plugin `docker compose`.
-  - **Windows/macOS:** Docker Desktop. En sus ajustes, activa *Start Docker Desktop when you sign in* para que la app arranque al encender el PC.
+### 1. Instalar Docker (solo la primera vez)
 
-### Pasos
+- **Windows 10/11:**
+  1. Instala [Docker Desktop](https://www.docker.com/products/docker-desktop/). Si lo pide, acepta activar WSL 2 y reinicia.
+  2. En Docker Desktop → *Settings → General*, activa **Start Docker Desktop when you sign in**. Así la app arranca sola al encender el PC.
+  3. Instala [Git for Windows](https://git-scm.com/download/win). Incluye **Git Bash**, la terminal desde la que se ejecutan los scripts `./scripts/…`.
+- **Linux:** instala Docker Engine con el plugin `docker compose`, y habilita el servicio con `sudo systemctl enable --now docker`.
 
-1. Copia la carpeta del proyecto al equipo (por ejemplo con `git clone` o un USB).
-2. Crea el fichero de configuración:
-   ```sh
-   cp .env.example .env
-   ```
-3. Edita `.env` y cambia al menos estos valores:
-   - `ADMIN_PASSWORD`: la contraseña inicial de **Ronald**.
-   - `SECRET_KEY`: genera una con `openssl rand -hex 32`.
-   - `POSTGRES_PASSWORD`.
-4. Arranca la aplicación:
-   ```sh
-   docker compose up -d
-   ```
-5. Abre **http://localhost:8080** y entra con `Ronald` y la contraseña de `.env`.
-6. Cambia la contraseña en **Ajustes**. A partir de ese momento, el valor de `.env` ya no se usa.
+### 2. Instalar la app
 
-Los servicios se reinician solos (`restart: unless-stopped`). Basta con encender el equipo y esperar a que Docker arranque.
+Abre una terminal (Git Bash en Windows) y ejecuta:
 
-### Acceso desde el móvil
+```sh
+git clone <dirección-del-repositorio> finanzas   # o copia la carpeta desde un USB
+cd finanzas
+./scripts/setup.sh
+```
 
-El móvil tiene que estar en la misma red wifi. Abre `http://IP-DEL-EQUIPO:8080`. La IP se consulta con `ip addr` en Linux o `ipconfig` en Windows.
+`setup.sh` pide la contraseña de **Ronald**. Después crea el fichero `.env` con claves aleatorias y arranca la app (la primera vez tarda unos minutos).
 
-Mantén `COOKIE_SECURE=false` mientras accedas por HTTP. Si algún día la publicas por HTTPS (con un proxy inverso o Tailscale), cámbialo a `true`.
+Si prefieres hacerlo a mano: copia `.env.example` a `.env`, cambia `ADMIN_PASSWORD`, `SECRET_KEY` y `POSTGRES_PASSWORD`, y ejecuta `docker compose up -d --build`.
 
-### Datos de ejemplo (opcional)
+### 3. Entrar
+
+- **En el PC:** http://localhost:8080
+- **En el móvil o la tablet** (en la misma wifi): `http://IP-DEL-PC:8080`. La IP se consulta con `ipconfig` en Windows o con `ip addr` en Linux, y suele ser del tipo 192.168.1.x. Conviene fijarla en el router para que no cambie.
+
+Entra con **Ronald** y la contraseña que elegiste. Puedes cambiarla en **Ajustes**; desde ese momento la de `.env` ya no se usa.
+
+Los servicios se reinician solos. Basta con encender el PC y esperar a que Docker arranque, normalmente menos de un minuto.
+
+> Mantén `COOKIE_SECURE=false` mientras se acceda por `http://`. Si algún día se publica por HTTPS (con un proxy inverso o Tailscale), cámbialo a `true`.
+
+## Primeros pasos (empezando desde 0 €)
+
+1. **Cuentas:** crea la cuenta del banco, el efectivo y la tarjeta, si la hay. Pon como saldo inicial lo que hay hoy en cada una (0 € si se empieza de cero) con la fecha de hoy. En la tarjeta de crédito, el saldo es lo que se debe, en negativo.
+2. **Recurrentes:** da de alta la pensión o nómina, el alquiler, la luz, el agua, los seguros, el IBI, las suscripciones…
+   - Con importe fijo se apuntan solos cada vez.
+   - Con importe variable (la luz) aparecen como «pendientes» en Inicio para confirmar el importe real.
+   - Si su primer pago fue antes de hoy, deja **sin marcar** «Registrar también lo anterior a hoy». Esos pagos ya están reflejados en el saldo inicial.
+3. **Día a día:** apunta los gastos que no se repiten (supermercado, gasolina…) con «Nuevo movimiento». Se puede adjuntar la foto del ticket.
+4. **Cuadrar el saldo:** cada cierto tiempo, compara el saldo con el del banco. Si no coincide, usa **Cuentas → Conciliar**.
+5. **Planificar:** revisa **Previsión**, que avisa si el saldo se quedaría en negativo, y **Provisiones**, que dice cuánto apartar para el IBI y los seguros. Cuando haya un par de meses de datos, crea **Presupuestos** y **Objetivos**.
+
+### Datos de ejemplo (solo para probar)
 
 ```sh
 docker compose exec backend python -m app.cli seed-demo
 ```
 
-Carga 4 cuentas, 14 recurrentes y un año de movimientos. Para volver a empezar de cero **borrando todos los datos**:
+Carga 4 cuentas, 14 recurrentes, un año de movimientos, presupuestos y objetivos. Para volver a dejar la app vacía, **borrando todos los datos**:
 
 ```sh
 docker compose down -v && docker compose up -d
@@ -130,6 +144,24 @@ El script pide confirmación y antes hace una copia del estado actual, por si ac
 
 > En Windows, los scripts `.sh` se ejecutan desde **Git Bash** o **WSL**.
 
+## Exportar e importar los datos (JSON)
+
+En **Ajustes → Exportar e importar datos**:
+
+- **Exportar todo** descarga un fichero `.json` con todos los datos: cuentas, movimientos, recurrentes, presupuestos, objetivos, preferencias y, si se marca la opción, los tickets y facturas. Sirve como copia en un USB o para pasar los datos a otro equipo. No incluye la contraseña.
+- **Importar desde un fichero**:
+  - Primero enseña qué contiene el fichero y pide confirmación.
+  - Después **sustituye todos los datos actuales** por los del fichero. Si algo falla, no se cambia nada.
+  - Se pueden importar ficheros exportados con versiones anteriores de la app.
+
+También desde la terminal:
+
+```sh
+docker compose exec -T backend python -m app.cli export > finanzas.json
+docker compose exec -T backend python -m app.cli import --comprobar < finanzas.json   # solo comprueba
+docker compose exec -T backend python -m app.cli import < finanzas.json
+```
+
 ## Actualizar la aplicación
 
 ```sh
@@ -142,16 +174,32 @@ Las migraciones de la base de datos se aplican solas al arrancar el backend.
 
 ## Mover la aplicación a otro equipo
 
-1. En el equipo antiguo, haz una copia con `./scripts/backup-now.sh`.
-2. En el nuevo, instala la app como se explica arriba, usando el mismo `.env`.
-3. Copia el `.dump` y el `_adjuntos.tar.gz` a `backups/`.
-4. Ejecuta `./scripts/restore.sh backups/finanzas_….dump`.
+La forma más sencilla:
+
+1. En el equipo antiguo, ve a **Ajustes → Exportar todo**, con los adjuntos marcados.
+2. Instala la app en el nuevo con `./scripts/setup.sh`.
+3. En el nuevo, ve a **Ajustes → Importar desde un fichero**.
+
+Otra opción es usar las copias de seguridad:
+
+1. En el equipo antiguo, ejecuta `./scripts/backup-now.sh`.
+2. Copia el `.dump` y el `_adjuntos.tar.gz` a la carpeta `backups/` del nuevo.
+3. En el nuevo, ejecuta `./scripts/restore.sh backups/finanzas_….dump`.
+
+## Problemas frecuentes
+
+- **La página no carga:** comprueba que Docker Desktop está abierto y ejecuta `docker compose ps`. Los cuatro servicios deben aparecer como `Up`; el backend y la base de datos, además, como `healthy`. Si alguno no está, ejecuta `docker compose up -d`.
+- **El puerto 8080 está ocupado:** cambia `APP_PORT` en `.env`, por ejemplo a `8090`, y ejecuta `docker compose up -d`.
+- **No entra desde el móvil:** el móvil tiene que estar en la misma wifi. En Windows, acepta el aviso del cortafuegos para Docker la primera vez o permite el puerto 8080.
+- **Contraseña olvidada:** `docker compose exec backend python -m app.cli reset-password Ronald`.
+- **Ver qué está pasando:** `docker compose logs -f backend`.
 
 ## Utilidades
 
 ```sh
 docker compose exec backend python -m app.cli reset-password Ronald  # si olvidas la contraseña
 docker compose exec backend python -m app.cli run-jobs               # forzar generación/confirmación de recurrentes
+docker compose exec -T backend python -m app.cli export > datos.json  # exportar todo a JSON
 docker compose logs -f backend                                       # ver registros
 docker compose ps                                                    # estado de los servicios
 ```
@@ -165,7 +213,7 @@ backend/
   app/domain/      lógica pura (motor de recurrencias, calendario de festivos)
   app/models/      modelos SQLAlchemy
   app/schemas/     esquemas Pydantic (entrada/salida de la API)
-  app/services/    lógica de negocio (saldos, movimientos, series y ocurrencias)
+  app/services/    lógica de negocio (saldos, recurrentes, informes, previsión, presupuestos, exportación)
   app/api/routes/  endpoints REST bajo /api (documentación en /api/docs)
   app/seed/        categorías iniciales y datos de ejemplo
   alembic/         migraciones
@@ -175,7 +223,7 @@ frontend/src/
   components/      UI común, selectores de importe/fecha/categoría…
   pages/           pantallas
 backup/            imagen del servicio de copias
-scripts/           backup-now, restore, gen-api
+scripts/           setup (primera instalación), backup-now, restore, gen-api
 ```
 
 ### Tests

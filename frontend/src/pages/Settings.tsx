@@ -2,6 +2,7 @@ import { Check, Pencil, Trash } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { useAppSettings, useChangePassword, useDeleteTag, useMe, useSaveSettings, useSaveTag, useTags } from "../api/hooks";
 import type { Tag } from "../api/types";
+import DataTransferCard from "../components/DataTransfer";
 import { ColorPicker, MoneyInput } from "../components/inputs";
 import { Checkbox, ConfirmDialog, ErrorBox, Field, Modal, PageHeader, Spinner } from "../components/ui";
 
@@ -175,6 +176,7 @@ export default function SettingsPage() {
         <ForecastSettingsCard />
         <PasswordCard />
         <TagsCard />
+        <DataTransferCard />
       </div>
     </>
   );

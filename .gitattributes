@@ -1,0 +1,5 @@
+# Finales de línea LF siempre, también al clonar en Windows: los scripts .sh se ejecutan
+# en Git Bash y dentro de contenedores Linux, y con CRLF fallan.
+* text=auto eol=lf
+*.png binary
+*.svg text eol=lf
