@@ -19,6 +19,15 @@ class UserOut(Schema):
     username: str
 
 
+class AuthOptionsOut(Schema):
+    registration_open: bool
+
+
+class UserCreateIn(Schema):
+    username: str = Field(min_length=2, max_length=50, pattern=r"^\S(.*\S)?$")
+    password: str = Field(min_length=8)
+
+
 class ChangePasswordIn(Schema):
     current_password: str
     new_password: str = Field(min_length=8)

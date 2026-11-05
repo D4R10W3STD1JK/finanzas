@@ -122,6 +122,21 @@ export const useLogin = () => {
   });
 };
 
+export const useAuthOptions = () =>
+  useQuery({ queryKey: ["auth-options"], queryFn: () => unwrap(api.GET("/api/auth/options")), staleTime: Infinity });
+
+/** Crea la cuenta e inicia sesión con ella, igual que useLogin. */
+export const useRegister = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: S["UserCreateIn"]) => unwrap(api.POST("/api/auth/register", { body })),
+    onSuccess: (user) => {
+      qc.setQueryData(["me"], user);
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
+    },
+  });
+};
+
 export const useLogout = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -130,6 +145,16 @@ export const useLogout = () => {
       qc.setQueryData(["me"], null);
       qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });
     },
+  });
+};
+
+export const useUsers = () => useQuery({ queryKey: ["users"], queryFn: () => unwrap(api.GET("/api/users")) });
+
+export const useCreateUser = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: S["UserCreateIn"]) => unwrap(api.POST("/api/users", { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
   });
 };
 

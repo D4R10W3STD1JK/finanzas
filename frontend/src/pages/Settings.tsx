@@ -1,6 +1,6 @@
-import { Check, Pencil, Trash } from "lucide-react";
+import { Check, Pencil, Trash, UserPlus } from "lucide-react";
 import { type FormEvent, useState } from "react";
-import { useAppSettings, useChangePassword, useDeleteTag, useMe, useSaveSettings, useSaveTag, useTags } from "../api/hooks";
+import { useAppSettings, useChangePassword, useCreateUser, useDeleteTag, useMe, useSaveSettings, useSaveTag, useTags, useUsers } from "../api/hooks";
 import type { Tag } from "../api/types";
 import DataTransferCard from "../components/DataTransfer";
 import { ColorPicker, MoneyInput } from "../components/inputs";
@@ -50,6 +50,100 @@ function PasswordCard() {
         Cambiar contraseña
       </button>
     </form>
+  );
+}
+
+function UsersCard() {
+  const { data: me } = useMe();
+  const { data: users = [] } = useUsers();
+  const create = useCreateUser();
+  const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeat, setRepeat] = useState("");
+  const [created, setCreated] = useState<string | null>(null);
+  const mismatch = repeat !== "" && password !== repeat;
+  const valid = username.trim().length >= 2 && password.length >= 8 && password === repeat;
+
+  const start = () => {
+    create.reset();
+    setUsername("");
+    setPassword("");
+    setRepeat("");
+    setOpen(true);
+  };
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!valid) return;
+    create.mutate(
+      { username: username.trim(), password },
+      {
+        onSuccess: (u) => {
+          setCreated(u.username);
+          setOpen(false);
+        },
+      },
+    );
+  };
+
+  return (
+    <div className="card p-5">
+      <div className="mb-1 flex items-start justify-between gap-3">
+        <h2 className="card-title">Usuarios</h2>
+        <button className="btn-secondary px-3 py-1.5 text-[13px]" onClick={start}>
+          <UserPlus className="size-4" /> Nuevo usuario
+        </button>
+      </div>
+      <p className="mb-3 text-sm text-fg-subtle">Cada usuario tiene sus propias cuentas, movimientos y ajustes, y no ve los de los demás.</p>
+      <ul className="divide-y divide-line">
+        {users.map((u) => (
+          <li key={u.id} className="flex items-center gap-3 py-2.5">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-accent-soft text-sm font-bold text-accent-text" aria-hidden>
+              {u.username.charAt(0).toUpperCase()}
+            </span>
+            <span className="flex-1 truncate text-sm font-semibold">{u.username}</span>
+            {u.id === me?.id && <span className="text-xs text-fg-subtle">Tú</span>}
+          </li>
+        ))}
+      </ul>
+      {created && (
+        <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-positive">
+          <Check className="size-4" /> {created} ya puede entrar con su contraseña
+        </p>
+      )}
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Nuevo usuario"
+        size="sm"
+        footer={
+          <>
+            <button className="btn-secondary" onClick={() => setOpen(false)}>
+              Cancelar
+            </button>
+            <button className="btn-primary" type="submit" form="new-user" disabled={!valid || create.isPending}>
+              {create.isPending && <Spinner className="size-4" />}
+              Crear usuario
+            </button>
+          </>
+        }
+      >
+        <form id="new-user" onSubmit={submit} className="space-y-4">
+          <p className="text-sm text-fg-subtle">Empezará con las categorías de siempre y sin cuentas ni movimientos.</p>
+          <Field label="Nombre de usuario">
+            {(id) => <input id={id} className="input" autoComplete="off" autoFocus value={username} onChange={(e) => setUsername(e.target.value)} />}
+          </Field>
+          <Field label="Contraseña" hint="Mínimo 8 caracteres">
+            {(id) => <input id={id} type="password" className="input" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
+          </Field>
+          <Field label="Repite la contraseña" error={mismatch ? "No coincide" : null}>
+            {(id) => <input id={id} type="password" className="input" autoComplete="new-password" value={repeat} onChange={(e) => setRepeat(e.target.value)} />}
+          </Field>
+          <ErrorBox error={create.error} />
+        </form>
+      </Modal>
+    </div>
   );
 }
 
@@ -175,6 +269,7 @@ export default function SettingsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <ForecastSettingsCard />
         <PasswordCard />
+        <UsersCard />
         <TagsCard />
         <DataTransferCard />
       </div>

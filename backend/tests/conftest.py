@@ -16,6 +16,7 @@ from app.main import app
 from app.models import Account, AccountType, Category, CategoryKind, User
 from app.security import hash_password
 from app.seed.categories import seed_default_categories
+from app.tenancy import set_current_user
 
 TODAY = date(2026, 6, 15)
 TEST_URL = os.environ.get(
@@ -47,11 +48,23 @@ def db(engine):
     conn = engine.connect()
     trans = conn.begin()
     session = Session(bind=conn, join_transaction_mode="create_savepoint", expire_on_commit=False)
+    user = User(username="Ronald", password_hash=hash_password("secreto123"))
+    session.add(user)
+    session.commit()
+    set_current_user(session, user.id)
     seed_default_categories(session)
     yield session
     session.close()
     trans.rollback()
     conn.close()
+
+
+@pytest.fixture(autouse=True)
+def _reset_auth_limits():
+    from app.api.routes import auth
+
+    auth._failures.clear()
+    auth._registrations.clear()
 
 
 @pytest.fixture(autouse=True)
@@ -74,8 +87,6 @@ def client(db):
 
 @pytest.fixture
 def auth_client(client, db):
-    db.add(User(username="Ronald", password_hash=hash_password("secreto123")))
-    db.commit()
     r = client.post("/api/auth/login", json={"username": "Ronald", "password": "secreto123"})
     assert r.status_code == 200, r.text
     return client

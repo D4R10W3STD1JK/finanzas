@@ -2,6 +2,7 @@
 
 import base64
 import copy
+import hashlib
 import json
 from datetime import date
 from decimal import Decimal
@@ -16,11 +17,33 @@ from app.services.errors import Invalid
 from tests.conftest import TODAY
 
 
-def snapshot(db) -> dict:
-    """Exportación sin campos que cambian en cada llamada, para comparar."""
-    data = data_io.export_data(db)
-    data.pop("exported_at")
+def canonical(data: dict) -> dict:
+    """Exportación comparable aunque los ids hayan cambiado: cada id pasa a ser su posición
+    (la importación conserva el orden) y los ficheros se identifican por su huella."""
+    data = copy.deepcopy(data)
+    data.pop("exported_at", None)
+    ranks = {}
+    for table in data_io.data_tables():
+        rows = data["tables"].get(table.name, [])
+        if rows and "id" in rows[0]:
+            ranks[table.name] = {old: i for i, old in enumerate(sorted(r["id"] for r in rows), 1)}
+    for table in data_io.data_tables():
+        fks = [(fk.parent.name, fk.column.table.name) for fk in table.foreign_keys if fk.column.table.name in ranks]
+        for row in data["tables"].get(table.name, []):
+            if table.name in ranks:
+                row["id"] = ranks[table.name][row["id"]]
+            for column, target in fks:
+                if row.get(column) is not None:
+                    row[column] = ranks[target][row[column]]
+            row.pop("storage_name", None)
+        data["tables"][table.name] = sorted(data["tables"].get(table.name, []), key=lambda r: json.dumps(r, sort_keys=True))
+    data["files"] = sorted(hashlib.sha256(base64.b64decode(c)).hexdigest() for c in data.get("files", {}).values())
     return data
+
+
+def snapshot(db) -> dict:
+    """Exportación sin lo que cambia al importar (ids, nombres de ficheros), para comparar."""
+    return canonical(data_io.export_data(db))
 
 
 def count(db, model) -> int:
@@ -35,7 +58,8 @@ def demo(db):
 
 def test_ida_y_vuelta(demo):
     db = demo
-    original = snapshot(db)
+    original = data_io.export_data(db)
+    original.pop("exported_at")
     assert original["counts"]["transactions"] > 150 and original["counts"]["budgets"] == 4
     assert "users" not in original["tables"]  # el usuario y su contraseña no se exportan
 
@@ -46,7 +70,7 @@ def test_ida_y_vuelta(demo):
     summary = data_io.import_data(db, json.loads(json.dumps(original)))
     assert summary["counts"]["transactions"] == original["counts"]["transactions"]
     db.expire_all()
-    assert snapshot(db) == original  # idéntico: importes, fechas, ids, relaciones...
+    assert snapshot(db) == canonical(original)  # idéntico: importes, fechas, relaciones...
 
     # Las secuencias siguen detrás del máximo id: se pueden crear datos nuevos
     tx = Transaction(kind=TransactionKind.INCOME, amount=Decimal("1"), date=TODAY, concept="tras importar",
@@ -59,7 +83,7 @@ def test_ida_y_vuelta(demo):
 def test_comprobar_no_cambia_nada(demo):
     db = demo
     before = snapshot(db)
-    other = copy.deepcopy(before)
+    other = data_io.export_data(db)
     other["tables"]["transactions"] = other["tables"]["transactions"][:10]
     other["tables"]["transaction_tags"] = [r for r in other["tables"]["transaction_tags"]
                                           if r["transaction_id"] in {t["id"] for t in other["tables"]["transactions"]}]
@@ -71,8 +95,6 @@ def test_comprobar_no_cambia_nada(demo):
 
 
 def test_el_usuario_no_se_toca(demo, db):
-    db.add(User(username="Ronald", password_hash="x"))
-    db.commit()
     data_io.import_data(db, data_io.export_data(db))
     assert count(db, User) == 1
 
@@ -142,7 +164,9 @@ def test_adjuntos(auth_client, db, make_account, expense_cat):
     assert r.json()["dry_run"] and count(db, Attachment) == 0
     r = auth_client.post("/api/data/import", files={"file": ("x.json", json.dumps(exported), "application/json")})
     assert r.status_code == 200 and r.json()["attachment_files"] == 1
-    att = auth_client.get(f"/api/transactions/{tx['id']}").json()["attachments"][0]
+    restored = auth_client.get("/api/transactions", params={"q": "Farmacia"}).json()["items"][0]
+    assert restored["id"] != tx["id"]  # los ids se renumeran al importar
+    att = restored["attachments"][0]
     assert auth_client.get(f"/api/attachments/{att['id']}").content == pdf
 
 

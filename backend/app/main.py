@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from app.api.deps import DB, current_user
-from app.api.routes import accounts, auth, budgets, categories, data, recurring, reports, transactions
+from app.api.routes import accounts, auth, budgets, categories, data, recurring, reports, transactions, users
 from app.config import get_settings
 from app.db import SessionLocal
 from app.services.bootstrap import bootstrap, run_jobs
@@ -66,6 +66,8 @@ _FIELD_NAMES = {
     "account_id": "cuenta",
     "category_id": "categoría",
     "to_account_id": "cuenta de destino",
+    "username": "usuario",
+    "password": "contraseña",
 }
 
 
@@ -91,7 +93,7 @@ def health(db: DB):
 
 api.include_router(auth.router)
 protected = [Depends(current_user)]
-for module in (accounts, categories, transactions, recurring, reports, budgets, data):
+for module in (accounts, categories, transactions, recurring, reports, budgets, data, users):
     api.include_router(module.router, dependencies=protected)
 api.include_router(reports.settings_router, dependencies=protected)
 app.include_router(api)

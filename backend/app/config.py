@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     admin_password: str = "cambia-esta-contraseña"
     cookie_secure: bool = False
     session_days: int = 30
+    # Si es False, solo se pueden crear usuarios desde Ajustes (con sesión) o desde la terminal.
+    allow_registration: bool = True
 
     timezone: str = "Europe/Madrid"
     holidays_country: str = "ES"

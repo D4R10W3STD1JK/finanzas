@@ -41,3 +41,6 @@ __all__ = [
     "recurring_version_tags",
     "transaction_tags",
 ]
+
+# Filtrado por usuario de todas las consultas (registra los eventos de la sesión).
+from app import tenancy as _tenancy  # noqa: E402, F401

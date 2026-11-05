@@ -17,11 +17,11 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
-from app.models.core import Account, Category, Money, TimestampMixin
+from app.models.core import Account, Category, Money, Owned, TimestampMixin
 from app.models.enums import GoalMode, str_enum
 
 
-class Budget(TimestampMixin, Base):
+class Budget(Owned, TimestampMixin, Base):
     """Presupuesto mensual de una categoría de gasto (incluye sus subcategorías).
 
     El importe es el mismo todos los meses desde `start_month`; los meses especiales
@@ -54,7 +54,7 @@ class Budget(TimestampMixin, Base):
         return self.amount
 
 
-class BudgetOverride(Base):
+class BudgetOverride(Owned, Base):
     """Excepción de un mes concreto (p. ej. más ocio en agosto)."""
 
     __tablename__ = "budget_overrides"
@@ -71,7 +71,7 @@ class BudgetOverride(Base):
     budget: Mapped[Budget] = relationship(back_populates="overrides")
 
 
-class SavingsGoal(TimestampMixin, Base):
+class SavingsGoal(Owned, TimestampMixin, Base):
     __tablename__ = "savings_goals"
     __table_args__ = (
         CheckConstraint("target_amount > 0", name="target_positive"),
@@ -95,7 +95,7 @@ class SavingsGoal(TimestampMixin, Base):
     )
 
 
-class GoalContribution(Base):
+class GoalContribution(Owned, Base):
     """Aportación (positiva) o retirada (negativa) a un objetivo en modo manual."""
 
     __tablename__ = "goal_contributions"

@@ -1,12 +1,13 @@
 import time
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from sqlalchemy import func, select
 
 from app.api.deps import DB, CurrentUser
 from app.config import get_settings
 from app.models import User
-from app.schemas.core import ChangePasswordIn, LoginIn, UserOut
+from app.schemas.core import AuthOptionsOut, ChangePasswordIn, LoginIn, UserCreateIn, UserOut
+from app.services import users
 from app.security import COOKIE_NAME, create_session_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -15,6 +16,8 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 _MAX_FAILURES = 5
 _LOCK_SECONDS = 60
 _failures: dict[str, tuple[int, float]] = {}
+_MAX_REGISTRATIONS_PER_HOUR = 5
+_registrations: dict[str, list[float]] = {}
 
 
 @router.post("/login", response_model=UserOut)
@@ -30,6 +33,34 @@ def login(data: LoginIn, response: Response, db: DB):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Usuario o contraseña incorrectos")
 
     _failures.pop(key, None)
+    _start_session(response, user)
+    return user
+
+
+@router.get("/options", response_model=AuthOptionsOut)
+def options():
+    """Lo que la pantalla de entrada necesita saber antes de iniciar sesión."""
+    return {"registration_open": get_settings().allow_registration}
+
+
+@router.post("/register", response_model=UserOut, status_code=201)
+def register(data: UserCreateIn, request: Request, response: Response, db: DB):
+    """Crea un usuario nuevo, con sus propias finanzas, e inicia su sesión."""
+    if not get_settings().allow_registration:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "El registro de usuarios nuevos está desactivado")
+    # Freno a la creación masiva de cuentas: unas pocas por hora desde cada dirección.
+    ip = request.client.host if request.client else "?"
+    now = time.monotonic()
+    recent = [t for t in _registrations.get(ip, []) if now - t < 3600]
+    if len(recent) >= _MAX_REGISTRATIONS_PER_HOUR:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Se han creado demasiadas cuentas seguidas. Prueba más tarde.")
+    user = users.create_user(db, data.username, data.password)
+    _registrations[ip] = [*recent, now]
+    _start_session(response, user)
+    return user
+
+
+def _start_session(response: Response, user: User) -> None:
     settings = get_settings()
     response.set_cookie(
         COOKIE_NAME,
@@ -40,7 +71,6 @@ def login(data: LoginIn, response: Response, db: DB):
         samesite="strict",
         path="/",
     )
-    return user
 
 
 @router.post("/logout", status_code=204)

@@ -1,6 +1,6 @@
 # Finanzas
 
-Aplicación web de finanzas personales, autoalojada y para un solo usuario. Gestiona cuentas, movimientos, recurrentes (nóminas, recibos, suscripciones), categorías y adjuntos. Funciona en español, en euros y con formato español (1.234,56 €, dd/mm/aaaa).
+Aplicación web de finanzas personales, autoalojada y con varios usuarios, cada uno con sus propias finanzas. Gestiona cuentas, movimientos, recurrentes (nóminas, recibos, suscripciones), categorías y adjuntos. Funciona en español, en euros y con formato español (1.234,56 €, dd/mm/aaaa).
 
 - **Backend:** Python 3.13, FastAPI, SQLAlchemy 2, Alembic y PostgreSQL 17.
 - **Frontend:** React 19, Vite, TypeScript, Tailwind 4 y TanStack Query, servido con nginx.
@@ -39,6 +39,21 @@ Si prefieres hacerlo a mano: copia `.env.example` a `.env`, cambia `ADMIN_PASSWO
 
 Entra con **Ronald** y la contraseña que elegiste. Puedes cambiarla en **Ajustes**; desde ese momento la de `.env` ya no se usa.
 
+### Más usuarios
+
+Para crear un usuario:
+
+- **Desde la pantalla de entrada:** pulsa **Crear una cuenta**, elige un nombre y una contraseña, y se entra directamente con la cuenta nueva. Se puede desactivar poniendo `ALLOW_REGISTRATION=false` en `.env` y ejecutando `docker compose up -d`.
+- **Con la sesión iniciada:** en **Ajustes → Usuarios → Nuevo usuario**.
+
+Cada usuario tiene sus propias cuentas, movimientos, recurrentes, categorías, presupuestos, objetivos y preferencias, y no ve los de los demás. Empieza con las categorías de siempre y sin cuentas ni movimientos.
+
+También desde la terminal:
+
+```sh
+docker compose exec backend python -m app.cli create-user Ana
+```
+
 Los servicios se reinician solos. Basta con encender el PC y esperar a que Docker arranque, normalmente menos de un minuto.
 
 > Mantén `COOKIE_SECURE=false` mientras se acceda por `http://`. Si algún día se publica por HTTPS (con un proxy inverso o Tailscale), cámbialo a `true`.
@@ -57,8 +72,10 @@ Los servicios se reinician solos. Basta con encender el PC y esperar a que Docke
 ### Datos de ejemplo (solo para probar)
 
 ```sh
-docker compose exec backend python -m app.cli seed-demo
+docker compose exec backend python -m app.cli seed-demo --usuario Ana
 ```
+
+`--usuario` indica en qué usuario se cargan. Si solo hay uno, se puede omitir.
 
 Carga 4 cuentas, 14 recurrentes, un año de movimientos, presupuestos y objetivos. Para volver a dejar la app vacía, **borrando todos los datos**:
 
@@ -148,19 +165,22 @@ El script pide confirmación y antes hace una copia del estado actual, por si ac
 
 En **Ajustes → Exportar e importar datos**:
 
-- **Exportar todo** descarga un fichero `.json` con todos los datos: cuentas, movimientos, recurrentes, presupuestos, objetivos, preferencias y, si se marca la opción, los tickets y facturas. Sirve como copia en un USB o para pasar los datos a otro equipo. No incluye la contraseña.
+- **Exportar todo** descarga un fichero `.json` con todos los datos del usuario que ha iniciado sesión: cuentas, movimientos, recurrentes, presupuestos, objetivos, preferencias y, si se marca la opción, los tickets y facturas. Sirve como copia en un USB o para pasar los datos a otro equipo. No incluye la contraseña.
 - **Importar desde un fichero**:
   - Primero enseña qué contiene el fichero y pide confirmación.
-  - Después **sustituye todos los datos actuales** por los del fichero. Si algo falla, no se cambia nada.
+  - Después **sustituye todos los datos de ese usuario** por los del fichero; los de los demás usuarios no se tocan. Si algo falla, no se cambia nada.
+  - Un fichero se puede importar en cualquier usuario, también en uno distinto del que lo exportó.
   - Se pueden importar ficheros exportados con versiones anteriores de la app.
 
 También desde la terminal:
 
 ```sh
-docker compose exec -T backend python -m app.cli export > finanzas.json
-docker compose exec -T backend python -m app.cli import --comprobar < finanzas.json   # solo comprueba
-docker compose exec -T backend python -m app.cli import < finanzas.json
+docker compose exec -T backend python -m app.cli export --usuario Ronald > finanzas.json
+docker compose exec -T backend python -m app.cli import --usuario Ronald --comprobar < finanzas.json   # solo comprueba
+docker compose exec -T backend python -m app.cli import --usuario Ronald < finanzas.json
 ```
+
+Con un solo usuario, `--usuario` se puede omitir.
 
 ## Actualizar la aplicación
 
@@ -197,9 +217,10 @@ Otra opción es usar las copias de seguridad:
 ## Utilidades
 
 ```sh
-docker compose exec backend python -m app.cli reset-password Ronald  # si olvidas la contraseña
-docker compose exec backend python -m app.cli run-jobs               # forzar generación/confirmación de recurrentes
-docker compose exec -T backend python -m app.cli export > datos.json  # exportar todo a JSON
+docker compose exec backend python -m app.cli create-user Ana                         # nuevo usuario
+docker compose exec backend python -m app.cli reset-password Ronald                   # si olvidas la contraseña
+docker compose exec backend python -m app.cli run-jobs                                # recurrentes de todos los usuarios
+docker compose exec -T backend python -m app.cli export --usuario Ronald > datos.json  # exportar a JSON
 docker compose logs -f backend                                       # ver registros
 docker compose ps                                                    # estado de los servicios
 ```

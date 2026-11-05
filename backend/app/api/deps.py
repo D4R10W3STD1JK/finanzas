@@ -8,6 +8,7 @@ from app import config
 from app.db import get_db
 from app.models import User
 from app.security import COOKIE_NAME, decode_session_token
+from app.tenancy import set_current_user
 
 DB = Annotated[Session, Depends(get_db)]
 
@@ -17,6 +18,8 @@ def current_user(db: DB, session: Annotated[str | None, Cookie(alias=COOKIE_NAME
     user = db.get(User, user_id) if user_id else None
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Sesión no iniciada o caducada")
+    # A partir de aquí, todas las consultas de esta petición ven solo los datos de este usuario.
+    set_current_user(db, user.id)
     return user
 
 

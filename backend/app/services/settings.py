@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.settings import AppSetting
@@ -16,7 +17,7 @@ def get_app_settings(db: Session) -> AppSettings:
 
 def update_app_settings(db: Session, data: AppSettings) -> AppSettings:
     for key, value in data.model_dump(mode="json").items():
-        row = db.get(AppSetting, key)
+        row = db.scalar(select(AppSetting).where(AppSetting.key == key))
         if row is None:
             db.add(AppSetting(key=key, value=value))
         else:

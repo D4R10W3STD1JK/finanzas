@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     Table,
     Text,
+    UniqueConstraint,
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -31,6 +32,12 @@ class TimestampMixin:
     )
 
 
+class Owned:
+    """Fila que pertenece a un usuario. Cada usuario solo ve las suyas: ver app/tenancy.py."""
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+
+
 class User(TimestampMixin, Base):
     __tablename__ = "users"
 
@@ -39,7 +46,7 @@ class User(TimestampMixin, Base):
     password_hash: Mapped[str] = mapped_column(String(255))
 
 
-class Account(TimestampMixin, Base):
+class Account(Owned, TimestampMixin, Base):
     __tablename__ = "accounts"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -57,7 +64,7 @@ class Account(TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text)
 
 
-class Category(TimestampMixin, Base):
+class Category(Owned, TimestampMixin, Base):
     __tablename__ = "categories"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -73,11 +80,12 @@ class Category(TimestampMixin, Base):
     children: Mapped[list["Category"]] = relationship(back_populates="parent")
 
 
-class Tag(Base):
+class Tag(Owned, Base):
     __tablename__ = "tags"
+    __table_args__ = (UniqueConstraint("user_id", "name"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(50), unique=True)
+    name: Mapped[str] = mapped_column(String(50))
     color: Mapped[str] = mapped_column(String(20), default="#64748b")
 
 
@@ -89,7 +97,7 @@ transaction_tags = Table(
 )
 
 
-class Transaction(TimestampMixin, Base):
+class Transaction(Owned, TimestampMixin, Base):
     __tablename__ = "transactions"
     __table_args__ = (
         CheckConstraint(
@@ -134,7 +142,7 @@ class Transaction(TimestampMixin, Base):
     occurrence: Mapped["Occurrence | None"] = relationship(back_populates="transaction")  # noqa: F821
 
 
-class Attachment(Base):
+class Attachment(Owned, Base):
     __tablename__ = "attachments"
 
     id: Mapped[int] = mapped_column(primary_key=True)

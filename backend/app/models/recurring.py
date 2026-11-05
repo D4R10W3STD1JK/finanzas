@@ -17,7 +17,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
 from app.domain.recurrence import ScheduleRule
-from app.models.core import Account, Category, Money, Tag, TimestampMixin, Transaction
+from app.models.core import Account, Category, Money, Owned, Tag, TimestampMixin, Transaction
 from app.models.enums import (
     AmountMode,
     BusinessDayAdjust,
@@ -29,7 +29,7 @@ from app.models.enums import (
 )
 
 
-class RecurringSeries(TimestampMixin, Base):
+class RecurringSeries(Owned, TimestampMixin, Base):
     """Identidad de una serie recurrente. Las condiciones que cambian con el tiempo
     (importe, día, cuenta...) viven en sus versiones (``RecurringVersion``)."""
 
@@ -80,7 +80,7 @@ recurring_version_tags = Table(
 )
 
 
-class RecurringVersion(Base):
+class RecurringVersion(Owned, Base):
     """Tramo de una serie, vigente desde ``effective_from`` hasta el siguiente tramo."""
 
     __tablename__ = "recurring_versions"
@@ -131,7 +131,7 @@ class RecurringVersion(Base):
         )
 
 
-class Occurrence(Base):
+class Occurrence(Owned, Base):
     __tablename__ = "occurrences"
     __table_args__ = (UniqueConstraint("series_id", "scheduled_date"),)
 

@@ -1,8 +1,13 @@
-"""Exportación e importación completa de los datos en JSON.
+"""Exportación e importación de los datos de un usuario en JSON.
 
-El fichero contiene todas las tablas de datos (no el usuario ni su contraseña) y,
-opcionalmente, los adjuntos en base64. La importación sustituye todos los datos actuales
-en una única transacción: o se importa todo o no cambia nada.
+El fichero contiene todas las tablas de datos del usuario actual (no el usuario ni su
+contraseña) y, opcionalmente, los adjuntos en base64. La importación sustituye solo los datos
+de ese usuario, en una única transacción: o se importa todo o no cambia nada. Los datos de los
+demás usuarios no se tocan.
+
+Los ids del fichero no se conservan: cada fila recibe uno nuevo (en el mismo orden) y las
+referencias entre tablas se traducen, para que el fichero se pueda importar en cualquier
+usuario o instalación sin chocar con lo que ya hay.
 
 Compatibilidad: al importar, las columnas que no existan en el fichero (exportado con una
 versión anterior de la app) toman su valor por defecto, y las que sobren se ignoran.
@@ -16,22 +21,38 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
-from sqlalchemy import Boolean, Column, Date, DateTime, Integer, Numeric, Table, delete, insert, select, text
+import uuid
+
+from sqlalchemy import Boolean, Column, Date, DateTime, Integer, Numeric, Table, delete, func, insert, select, text
 from sqlalchemy.orm import Session
 
 import app.models  # noqa: F401  (registra todas las tablas)
 from app.db import Base
 from app.services import attachments as att_files
 from app.services.errors import Invalid
+from app.tenancy import current_user_id
 
 FORMAT = "finanzas-export"
 FORMAT_VERSION = 1
 EXCLUDED_TABLES = {"users"}
+OWNER = "user_id"
 
 
 def data_tables() -> list[Table]:
     """Tablas en orden de dependencias (las referenciadas primero)."""
     return [t for t in Base.metadata.sorted_tables if t.name not in EXCLUDED_TABLES]
+
+
+def _owner_filter(table: Table, user_id: int):
+    """Condición que deja solo las filas del usuario. Las tablas de enlace (etiquetas de un
+    movimiento...) no tienen dueño propio: son del usuario si lo es la fila a la que apuntan."""
+    if OWNER in table.c:
+        return table.c[OWNER] == user_id
+    for fk in table.foreign_keys:
+        parent = fk.column.table
+        if OWNER in parent.c:
+            return fk.parent.in_(select(fk.column).where(parent.c[OWNER] == user_id))
+    raise AssertionError(f"La tabla {table.name} no se puede asociar a un usuario")
 
 
 def _schema_revision(db: Session) -> str | None:
@@ -70,12 +91,13 @@ def _load_value(column: Column, value: Any) -> Any:
 
 
 def export_data(db: Session, include_attachments: bool = True) -> dict:
+    user_id = current_user_id(db)
     tables = {}
     counts = {}
     for table in data_tables():
         order = [c for c in table.primary_key.columns]
-        rows = db.execute(select(table).order_by(*order)).mappings().all()
-        tables[table.name] = [{k: _dump_value(v) for k, v in row.items()} for row in rows]
+        rows = db.execute(select(table).where(_owner_filter(table, user_id)).order_by(*order)).mappings().all()
+        tables[table.name] = [{k: _dump_value(v) for k, v in row.items() if k != OWNER} for row in rows]
         counts[table.name] = len(rows)
 
     files = {}
@@ -126,6 +148,8 @@ def _prepare_rows(table: Table, rows: list[dict]) -> list[dict]:
     for raw in rows:
         row = {}
         for column in table.columns:
+            if column.name == OWNER:
+                continue  # se pone al importar: el del usuario actual
             if column.name in raw:
                 row[column.name] = _load_value(column, raw[column.name])
             elif column.server_default is not None:
@@ -162,22 +186,51 @@ def _decode_files(payload: dict) -> dict[str, bytes]:
     return decoded
 
 
-def _reset_sequences(db: Session) -> None:
-    for table in data_tables():
+def _renumber(db: Session, tables: list[Table], prepared: dict[str, list[dict]], user_id: int) -> dict[str, str]:
+    """Ids nuevos para todas las filas (conservando su orden) y referencias traducidas.
+
+    Devuelve el cambio de nombre de los ficheros de adjuntos, que también deben ser únicos.
+    """
+    new_ids: dict[str, dict[int, int]] = {}
+    for table in tables:
         id_col = table.columns.get("id")
-        if id_col is None or not isinstance(id_col.type, Integer):
+        rows = prepared[table.name]
+        if id_col is None or not isinstance(id_col.type, Integer) or not rows:
             continue
-        db.execute(
-            text(
-                f"SELECT setval(pg_get_serial_sequence('{table.name}', 'id'), "
-                f"COALESCE((SELECT MAX(id) FROM {table.name}), 1), "
-                f"(SELECT MAX(id) FROM {table.name}) IS NOT NULL)"
-            )
-        )
+        old = sorted({r["id"] for r in rows})
+        seq = func.nextval(func.pg_get_serial_sequence(table.name, "id"))
+        fresh = db.execute(select(seq).select_from(func.generate_series(1, len(old)))).scalars().all()
+        new_ids[table.name] = dict(zip(old, sorted(fresh), strict=True))
+
+    renamed_files: dict[str, str] = {}
+    for table in tables:
+        fks = [(fk.parent.name, fk.column.table.name) for fk in table.foreign_keys if fk.column.name == "id"]
+        for row in prepared[table.name]:
+            if "id" in row and table.name in new_ids:
+                row["id"] = new_ids[table.name][row["id"]]
+            for column, target in fks:
+                value = row.get(column)
+                if value is None:
+                    continue
+                if value not in new_ids.get(target, {}):
+                    raise Invalid(
+                        "Los datos del fichero no son coherentes y no se ha importado nada "
+                        f"({table.name}.{column} apunta a una fila de {target} que no está en el fichero: {value})"
+                    )
+                row[column] = new_ids[target][value]
+            if OWNER in table.c:
+                row[OWNER] = user_id
+            if table.name == "attachments":
+                old_name = row["storage_name"]
+                new_name = f"{Path(old_name).parent.as_posix()}/{uuid.uuid4().hex}{Path(old_name).suffix}".lstrip("./")
+                renamed_files[old_name] = new_name
+                row["storage_name"] = new_name
+    return renamed_files
 
 
 def import_data(db: Session, payload: Any, dry_run: bool = False) -> dict:
-    """Sustituye todos los datos por los del fichero. Con `dry_run` solo valida y cuenta."""
+    """Sustituye los datos del usuario actual por los del fichero. Con `dry_run` solo valida y cuenta."""
+    user_id = current_user_id(db)
     payload = _validate(payload)
     files = _decode_files(payload)
     tables = data_tables()
@@ -192,16 +245,18 @@ def import_data(db: Session, payload: Any, dry_run: bool = False) -> dict:
     }
 
     root = att_files.storage_root()
-    previous_files = {p.relative_to(root).as_posix() for p in root.rglob("*") if p.is_file()} if root.exists() else set()
+    attachments = next(t for t in tables if t.name == "attachments")
+    # Solo los ficheros de este usuario: los adjuntos de los demás no se tocan.
+    previous_files = set(db.execute(select(attachments.c.storage_name).where(_owner_filter(attachments, user_id))).scalars())
     written: list[str] = []
     savepoint = db.begin_nested()
     try:
         for table in reversed(tables):
-            db.execute(delete(table))
+            db.execute(delete(table).where(_owner_filter(table, user_id)))
+        renamed = _renumber(db, tables, prepared, user_id)
         for table in tables:
             if prepared[table.name]:
                 db.execute(insert(table), prepared[table.name])
-        _reset_sequences(db)
         db.flush()
     except Invalid:
         savepoint.rollback()
@@ -218,10 +273,10 @@ def import_data(db: Session, payload: Any, dry_run: bool = False) -> dict:
     savepoint.commit()
     try:
         for name, content in files.items():
-            path = root / name
+            target = renamed.get(name, name)
+            path = root / target
             path.parent.mkdir(parents=True, exist_ok=True)
-            if not path.exists():
-                written.append(name)
+            written.append(target)
             path.write_bytes(content)
         db.commit()
     except Exception:
@@ -230,8 +285,8 @@ def import_data(db: Session, payload: Any, dry_run: bool = False) -> dict:
             (root / name).unlink(missing_ok=True)
         raise
 
-    # Borrar los ficheros de adjuntos que ya no corresponden a ningún dato.
-    keep = {r["storage_name"] for r in prepared.get("attachments", [])}
-    for name in previous_files - keep:
+    # Los adjuntos que este usuario tenía antes de importar ya no corresponden a ningún dato.
+    for name in previous_files:
         (root / name).unlink(missing_ok=True)
+    db.expire_all()
     return summary

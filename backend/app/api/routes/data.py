@@ -1,10 +1,11 @@
 import json
+import re
 from datetime import datetime
 
 from fastapi import APIRouter, UploadFile
 from fastapi.responses import Response
 
-from app.api.deps import DB, Today
+from app.api.deps import DB, CurrentUser, Today
 from app.services import data_io
 from app.services.errors import Invalid
 from app.services.recurring import sync_all
@@ -15,10 +16,11 @@ MAX_IMPORT_MB = 60
 
 
 @router.get("/export")
-def export(db: DB, include_attachments: bool = True):
-    """Descarga todos los datos en un fichero JSON."""
+def export(db: DB, user: CurrentUser, include_attachments: bool = True):
+    """Descarga todos los datos del usuario en un fichero JSON."""
     payload = data_io.export_data(db, include_attachments)
-    name = f"finanzas_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
+    who = re.sub(r"[^A-Za-z0-9_-]+", "-", user.username).strip("-") or "usuario"
+    name = f"finanzas_{who}_{datetime.now().strftime('%Y%m%d_%H%M')}.json"
     return Response(
         content=json.dumps(payload, ensure_ascii=False, indent=1),
         media_type="application/json",
@@ -28,7 +30,7 @@ def export(db: DB, include_attachments: bool = True):
 
 @router.post("/import")
 def import_(file: UploadFile, db: DB, today: Today, dry_run: bool = False):
-    """Sustituye todos los datos por los del fichero. Con `dry_run=true` solo lo comprueba."""
+    """Sustituye los datos del usuario por los del fichero. Con `dry_run=true` solo lo comprueba."""
     raw = file.file.read(MAX_IMPORT_MB * 1024 * 1024 + 1)
     if len(raw) > MAX_IMPORT_MB * 1024 * 1024:
         raise Invalid(f"El fichero supera {MAX_IMPORT_MB} MB")
