@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 export type Theme = "system" | "light" | "dark";
 const KEY = "tema";
@@ -17,16 +17,30 @@ function apply(theme: Theme) {
   document.documentElement.classList.toggle("dark", dark);
 }
 
+// Un único valor compartido: todos los selectores de tema (barra lateral, menú «Más», Ctrl K) lo ven igual.
+let current: Theme = read();
+const listeners = new Set<() => void>();
+
+function setTheme(theme: Theme) {
+  current = theme;
+  try {
+    localStorage.setItem(KEY, theme);
+  } catch {
+    /* almacenamiento no disponible: el tema solo dura esta sesión */
+  }
+  listeners.forEach((l) => l());
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
 export function useTheme(): [Theme, (t: Theme) => void] {
-  const [theme, setTheme] = useState<Theme>(read);
+  const theme = useSyncExternalStore(subscribe, () => current);
 
   useEffect(() => {
     apply(theme);
-    try {
-      localStorage.setItem(KEY, theme);
-    } catch {
-      /* almacenamiento no disponible: el tema solo dura esta sesión */
-    }
     if (theme !== "system") return;
     const mq = matchMedia("(prefers-color-scheme: dark)");
     const onChange = () => apply("system");
