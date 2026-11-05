@@ -2,61 +2,185 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Sistema de diseño.
+ *
+ * Los componentes usan tokens semánticos (bg-surface, text-fg-muted, border-line…), que cambian
+ * solos entre claro y oscuro. La escala "slate" se redefine con los mismos neutros para que el
+ * código que aún usa clases slate-* encaje con los tokens mientras se migra.
+ */
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --color-brand-50: #ecfdf5;
-  --color-brand-100: #d1fae5;
-  --color-brand-500: #10b981;
-  --color-brand-600: #059669;
-  --color-brand-700: #047857;
-  --color-income: #059669;
-  --color-expense: #dc2626;
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-slate-50: #f7f7f8;
+  --color-slate-100: #f0f0f3;
+  --color-slate-200: #e7e7ec;
+  --color-slate-300: #d4d4db;
+  --color-slate-400: #a1a1aa;
+  --color-slate-500: #6e6e78;
+  --color-slate-600: #55555f;
+  --color-slate-700: #3f3f46;
+  --color-slate-800: #222228;
+  --color-slate-900: #141418;
+  --color-slate-950: #0b0b0e;
+
+  /* Acento índigo. 500 es lo bastante claro para texto sobre fondo oscuro. */
+  --color-brand-50: #eef0ff;
+  --color-brand-100: #e0e4ff;
+  --color-brand-400: #8b8ff5;
+  --color-brand-500: #7b7ff2;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+
+  --radius-card: 14px;
+  --radius-control: 10px;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-faint: var(--fg-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+  --color-income: var(--positive);
+  --color-positive: var(--positive);
+  --color-positive-soft: var(--positive-soft);
+  --color-expense: var(--negative);
+  --color-negative: var(--negative);
+  --color-negative-soft: var(--negative-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-track: var(--track);
+  --shadow-card: var(--card-shadow);
+  --shadow-overlay: var(--overlay-shadow);
 }
 
 @layer base {
+  :root {
+    color-scheme: light;
+    --canvas: #f7f7f8;
+    --surface: #ffffff;
+    --surface-2: #f0f0f3;
+    --line: #e7e7ec;
+    --line-strong: #d4d4db;
+    --fg: #18181b;
+    --fg-muted: #55555f;
+    --fg-subtle: #6e6e78;
+    --fg-faint: #a1a1aa;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-fg: #ffffff;
+    --accent-soft: #eef0ff;
+    --accent-text: #4338ca;
+    --positive: #047857;
+    --positive-soft: #e7f6ef;
+    --negative: #c2410c;
+    --negative-soft: #fdeee6;
+    --warning: #b45309;
+    --warning-soft: #fef4dc;
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-soft: #fef2f2;
+    --track: #ececf1;
+    --card-shadow: 0 1px 2px rgb(24 24 27 / 0.04), 0 1px 1px rgb(24 24 27 / 0.03);
+    --overlay-shadow: 0 16px 48px -12px rgb(24 24 27 / 0.25), 0 2px 6px rgb(24 24 27 / 0.06);
+  }
+  :root.dark {
+    color-scheme: dark;
+    --canvas: #0b0b0e;
+    --surface: #141418;
+    --surface-2: #1c1c22;
+    --line: #26262e;
+    --line-strong: #34343d;
+    --fg: #f4f4f5;
+    --fg-muted: #b4b4bd;
+    --fg-subtle: #8e8e99;
+    --fg-faint: #5f5f69;
+    --accent: #8b8ff5;
+    --accent-hover: #a3a6f8;
+    --accent-fg: #0b0b0e;
+    --accent-soft: rgb(139 143 245 / 0.14);
+    --accent-text: #b4b7fa;
+    --positive: #3dd68c;
+    --positive-soft: rgb(61 214 140 / 0.12);
+    --negative: #fb9152;
+    --negative-soft: rgb(251 145 82 / 0.12);
+    --warning: #f5c04a;
+    --warning-soft: rgb(245 192 74 / 0.12);
+    --danger: #dc2626;
+    --danger-hover: #b91c1c;
+    --danger-soft: rgb(239 68 68 / 0.12);
+    --track: #24242c;
+    --card-shadow: none;
+    --overlay-shadow: 0 16px 48px -12px rgb(0 0 0 / 0.6);
+  }
+
   html {
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+    @apply bg-canvas text-fg antialiased;
+    font-feature-settings: "cv11", "ss01";
   }
-  :root {
-    color-scheme: light;
+  ::selection {
+    @apply bg-accent-soft;
   }
-  :root.dark {
-    color-scheme: dark;
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
 @utility card {
-  @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+  @apply rounded-card border border-line bg-surface shadow-card;
 }
 @utility input {
-  @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400
-    focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 focus:outline-none
-    disabled:cursor-not-allowed disabled:opacity-60
-    dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500;
+  /* text-base en el móvil evita que iOS haga zoom al enfocar el campo. */
+  @apply block w-full rounded-control border border-line-strong bg-surface px-3 py-2 text-base text-fg placeholder:text-fg-faint sm:text-sm
+    transition-colors hover:border-fg-faint focus:border-accent focus:ring-3 focus:ring-accent/20 focus:outline-none
+    disabled:cursor-not-allowed disabled:opacity-60;
 }
 @utility label {
-  @apply mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300;
+  @apply mb-1.5 block text-sm font-medium text-fg-muted;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors
-    focus-visible:ring-2 focus-visible:ring-brand-500/50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-control px-3.5 py-2 text-sm font-semibold transition-colors
+    disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
-  @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  @apply btn bg-accent text-accent-fg hover:bg-accent-hover;
 }
 @utility btn-secondary {
-  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50
-    dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+  @apply btn bg-surface text-fg ring-1 ring-line-strong ring-inset hover:bg-surface-2;
 }
 @utility btn-ghost {
-  @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800;
+  @apply btn text-fg-muted hover:bg-surface-2 hover:text-fg;
 }
 @utility btn-danger {
-  @apply btn bg-red-600 text-white hover:bg-red-700;
+  @apply btn bg-danger text-white hover:bg-danger-hover;
 }
 @utility amount {
   @apply tabular-nums whitespace-nowrap;
+}
+@utility link {
+  @apply font-semibold text-accent-text hover:underline;
 }

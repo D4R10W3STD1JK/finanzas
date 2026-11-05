@@ -6,6 +6,7 @@ import { ApiError, UNAUTHORIZED_EVENT } from "./api/client";
 import { useMe } from "./api/hooks";
 import { PageLoader } from "./components/ui";
 import Layout from "./components/Layout";
+import "@fontsource-variable/inter";
 import "./index.css";
 import AccountsPage from "./pages/Accounts";
 import BudgetsPage from "./pages/Budgets";

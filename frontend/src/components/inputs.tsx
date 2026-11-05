@@ -54,7 +54,7 @@ export function MoneyInput({
           setText(parsed ? formatAmountInput(parsed) : text);
         }}
       />
-      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-slate-400">€</span>
+      <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-fg-subtle">€</span>
     </div>
   );
 }
@@ -83,7 +83,7 @@ export function DateInput({
     <div className="relative">
       <input
         id={id}
-        className={clsx("input pr-10", invalid && "border-red-400 focus:border-red-500 focus:ring-red-500/30")}
+        className={clsx("input pr-10", invalid && "border-danger hover:border-danger focus:border-danger focus:ring-danger/20")}
         placeholder="dd/mm/aaaa"
         inputMode="numeric"
         autoComplete="off"
@@ -102,7 +102,7 @@ export function DateInput({
       />
       <button
         type="button"
-        className="absolute inset-y-0 right-0 flex items-center px-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+        className="absolute inset-y-0 right-0 flex items-center px-3 text-fg-subtle hover:text-fg"
         onClick={() => picker.current?.showPicker?.()}
         aria-label="Abrir calendario"
         tabIndex={-1}
@@ -232,8 +232,8 @@ export function TagPicker({ value, onChange }: { value: number[]; onChange: (ids
                 type="button"
                 onClick={() => toggle(t.id)}
                 className={clsx(
-                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors",
-                  on ? "border-transparent text-white" : "border-slate-300 text-slate-600 dark:border-slate-700 dark:text-slate-300",
+                  "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors",
+                  on ? "border-transparent text-white" : "border-line-strong text-fg-muted hover:bg-surface-2",
                 )}
                 style={on ? { backgroundColor: t.color } : undefined}
               >
@@ -267,7 +267,7 @@ export function TagPicker({ value, onChange }: { value: number[]; onChange: (ids
 
 export function IconPicker({ value, onChange, color }: { value: string; onChange: (v: string) => void; color: string }) {
   return (
-    <div className="grid max-h-40 grid-cols-8 gap-1 overflow-y-auto rounded-lg border border-slate-200 p-1.5 sm:grid-cols-10 dark:border-slate-700">
+    <div className="grid max-h-40 grid-cols-8 gap-1 overflow-y-auto rounded-control border border-line-strong p-1.5 sm:grid-cols-10">
       {Object.keys(ICONS).map((name) => (
         <button
           key={name}
@@ -275,7 +275,7 @@ export function IconPicker({ value, onChange, color }: { value: string; onChange
           onClick={() => onChange(name)}
           className={clsx(
             "flex aspect-square items-center justify-center rounded-md transition-colors",
-            value === name ? "text-white" : "text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800",
+            value === name ? "text-white" : "text-fg-subtle hover:bg-surface-2 hover:text-fg",
           )}
           style={value === name ? { backgroundColor: color } : undefined}
           aria-label={name}
@@ -296,8 +296,8 @@ export function ColorPicker({ value, onChange }: { value: string; onChange: (v: 
           type="button"
           onClick={() => onChange(c)}
           className={clsx(
-            "size-7 rounded-full ring-offset-2 transition dark:ring-offset-slate-900",
-            value === c && "ring-2 ring-slate-900 dark:ring-white",
+            "size-7 rounded-full ring-offset-2 ring-offset-surface transition",
+            value === c && "ring-2 ring-fg",
           )}
           style={{ backgroundColor: c }}
           aria-label={`Color ${c}`}

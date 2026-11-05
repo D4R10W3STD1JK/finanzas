@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 
 // Paleta de gráficos validada (CVD, contraste) contra las superficies de la app:
-// blanco en claro y slate-900 (#0f172a) en oscuro. Cada modo tiene sus propios tonos.
+// blanco en claro y #141418 en oscuro (misma luminancia que el slate-900 original). Cada modo tiene sus propios tonos.
 const LIGHT = {
   income: "#2a78d6",
   expense: "#eb6834",
   savings: "#6250d6",
   surface: "#ffffff",
-  grid: "#e2e8f0",
-  axis: "#64748b",
-  muted: "#cbd5e1",
+  grid: "#e7e7ec",
+  axis: "#6e6e78",
+  muted: "#d4d4db",
   critical: "#d03b3b", // estado, siempre acompañado de etiqueta
 };
 
@@ -17,10 +17,10 @@ const DARK: typeof LIGHT = {
   income: "#3987e5",
   expense: "#d95926",
   savings: "#9085e9",
-  surface: "#0f172a",
-  grid: "#1e293b",
-  axis: "#94a3b8",
-  muted: "#334155",
+  surface: "#141418",
+  grid: "#26262e",
+  axis: "#8e8e99",
+  muted: "#34343d",
   critical: "#d03b3b",
 };
 

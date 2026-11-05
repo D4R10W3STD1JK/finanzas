@@ -2,7 +2,7 @@ import clsx from "clsx";
 import type { TransactionKind } from "../api/types";
 import { formatMoney } from "../lib/format";
 
-/** Importe coloreado según el tipo: gastos en rojo con signo menos, ingresos en verde. */
+/** Importe coloreado según el tipo: gastos con signo menos, ingresos en verde. */
 export function Amount({
   kind,
   value,
@@ -18,12 +18,12 @@ export function Amount({
     kind === "income"
       ? "text-income"
       : kind === "expense"
-        ? "text-slate-900 dark:text-slate-100"
+        ? "text-fg"
         : kind === "adjustment"
           ? signed < 0
             ? "text-expense"
             : "text-income"
-          : "text-slate-500 dark:text-slate-400";
+          : "text-fg-subtle";
   return (
     <span className={clsx("amount font-medium", color, className)}>
       {kind === "transfer" ? formatMoney(n) : formatMoney(signed, { sign: true })}

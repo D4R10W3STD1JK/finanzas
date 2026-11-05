@@ -131,7 +131,7 @@ export default function HomePage() {
       />
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="card bg-gradient-to-br from-brand-600 to-brand-700 p-4 text-white sm:col-span-2 lg:col-span-1 dark:from-brand-700 dark:to-emerald-900">
+        <div className="card bg-gradient-to-br from-brand-600 to-brand-700 p-4 text-white sm:col-span-2 lg:col-span-1 dark:from-brand-600 dark:to-brand-700">
           <p className="text-sm opacity-85">Saldo total hoy</p>
           <p className="amount mt-1 text-3xl font-semibold">{formatMoney(d.total_balance)}</p>
           <p className="mt-1.5 text-xs opacity-85">

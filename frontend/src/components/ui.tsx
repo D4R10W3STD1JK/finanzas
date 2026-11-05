@@ -8,18 +8,23 @@ export function Spinner({ className }: { className?: string }) {
 
 export function PageLoader() {
   return (
-    <div className="flex justify-center py-16 text-slate-400">
+    <div className="flex justify-center py-16 text-fg-faint">
       <Spinner className="size-7" />
     </div>
   );
 }
 
+/** Bloque gris animado que ocupa el sitio del contenido mientras carga. */
+export function Skeleton({ className }: { className?: string }) {
+  return <div className={clsx("animate-pulse rounded-control bg-surface-2", className)} aria-hidden />;
+}
+
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
+        <h1 className="text-[1.75rem] leading-tight font-bold tracking-[-0.025em]">{title}</h1>
+        {subtitle && <p className="mt-1 text-sm text-fg-subtle">{subtitle}</p>}
       </div>
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
     </div>
@@ -47,9 +52,9 @@ export function Field({
       </label>
       {children(id)}
       {error ? (
-        <p className="mt-1 text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p className="mt-1.5 text-xs font-medium text-danger">{error}</p>
       ) : (
-        hint && <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{hint}</p>
+        hint && <p className="mt-1.5 text-xs text-fg-subtle">{hint}</p>
       )}
     </div>
   );
@@ -70,13 +75,13 @@ export function Checkbox({
     <label className="flex cursor-pointer items-start gap-2.5 text-sm">
       <input
         type="checkbox"
-        className="mt-0.5 size-4 rounded border-slate-300 accent-brand-600"
+        className="mt-0.5 size-4 rounded accent-accent"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
       <span>
         <span className="font-medium">{label}</span>
-        {hint && <span className="block text-xs text-slate-500 dark:text-slate-400">{hint}</span>}
+        {hint && <span className="block text-xs text-fg-subtle">{hint}</span>}
       </span>
     </label>
   );
@@ -92,17 +97,17 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <div className="inline-flex w-full rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+    <div className="inline-flex w-full gap-0.5 rounded-control bg-surface-2 p-[3px]">
       {options.map((o) => (
         <button
           key={o.value}
           type="button"
           onClick={() => onChange(o.value)}
           className={clsx(
-            "flex-1 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
+            "flex-1 rounded-[7px] px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors",
             value === o.value
-              ? clsx("bg-white shadow-sm dark:bg-slate-700", o.className)
-              : "text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200",
+              ? clsx("bg-surface text-fg shadow-card ring-1 ring-line", o.className)
+              : "text-fg-subtle hover:text-fg",
           )}
         >
           {o.label}
@@ -144,22 +149,22 @@ export function Modal({
         onClose();
       }}
       className={clsx(
-        "m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-2xl bg-white p-0 text-slate-900 shadow-xl backdrop:bg-slate-950/50",
-        "sm:m-auto sm:rounded-2xl dark:bg-slate-900 dark:text-slate-100",
+        "m-0 mt-auto max-h-[92dvh] w-full max-w-none rounded-t-2xl border border-line bg-surface p-0 text-fg shadow-overlay",
+        "backdrop:bg-slate-950/40 backdrop:backdrop-blur-[2px] sm:m-auto sm:rounded-2xl",
         { sm: "sm:max-w-sm", md: "sm:max-w-lg", lg: "sm:max-w-2xl" }[size],
       )}
     >
       {open && (
         <div className="flex max-h-[92dvh] flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3.5 dark:border-slate-800">
-            <h2 className="text-lg font-semibold">{title}</h2>
+          <div className="flex items-center justify-between px-5 pt-4 pb-2">
+            <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
             <button type="button" className="btn-ghost -mr-2 p-1.5" onClick={onClose} aria-label="Cerrar">
               <X className="size-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
+          <div className="flex-1 overflow-y-auto px-5 py-3">{children}</div>
           {footer && (
-            <div className="flex justify-end gap-2 border-t border-slate-200 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] dark:border-slate-800">
+            <div className="flex justify-end gap-2 border-t border-line bg-surface-2/50 px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               {footer}
             </div>
           )}
@@ -206,7 +211,7 @@ export function ConfirmDialog({
         </>
       }
     >
-      <div className="text-sm text-slate-600 dark:text-slate-300">{message}</div>
+      <div className="text-sm text-fg-muted">{message}</div>
     </Modal>
   );
 }
@@ -215,7 +220,7 @@ export function ErrorBox({ error }: { error: unknown }) {
   if (!error) return null;
   const message = error instanceof Error ? error.message : String(error);
   return (
-    <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/50 dark:text-red-300">
+    <div role="alert" className="rounded-control bg-danger-soft px-3 py-2.5 text-sm font-medium text-red-700 dark:text-red-300">
       {message}
     </div>
   );
@@ -224,9 +229,9 @@ export function ErrorBox({ error }: { error: unknown }) {
 export function EmptyState({ icon, title, children }: { icon: ReactNode; title: string; children?: ReactNode }) {
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center">
-      <div className="mb-3 rounded-full bg-slate-100 p-3 text-slate-400 dark:bg-slate-800">{icon}</div>
-      <p className="font-medium">{title}</p>
-      {children && <div className="mt-1 text-sm text-slate-500 dark:text-slate-400">{children}</div>}
+      <div className="mb-4 grid size-12 place-items-center rounded-card bg-surface-2 text-fg-subtle ring-1 ring-line">{icon}</div>
+      <p className="font-semibold">{title}</p>
+      {children && <div className="mt-1 max-w-sm text-sm text-fg-subtle">{children}</div>}
     </div>
   );
 }
@@ -235,8 +240,8 @@ export function Badge({ children, className }: { children: ReactNode; className?
   return (
     <span
       className={clsx(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
-        className ?? "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300",
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+        className ?? "bg-surface-2 text-fg-muted",
       )}
     >
       {children}
