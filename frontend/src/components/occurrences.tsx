@@ -257,8 +257,8 @@ export function OccurrenceList({ items, showSeries = true, dateBlock = false }: 
                       </span>
                     )
                   )}
-                  {/* En la vista por fechas, «Prevista» es lo normal: solo se marca lo que no lo es. */}
-                  {!(dateBlock && upcoming) && <StatusBadge occ={occ} />}
+                  {/* En las listas ordenadas por fecha, «Prevista» es lo normal: solo se marca lo que no lo es. */}
+                  {!((dateBlock || !showSeries) && upcoming) && <StatusBadge occ={occ} />}
                   {!dateBlock && occ.amount_mode === "variable" && occ.status === "planned" && <span>estimado</span>}
                 </div>
               </div>

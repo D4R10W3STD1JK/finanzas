@@ -5,7 +5,7 @@ import { useAccounts, useCategories, useSeriesList } from "../api/hooks";
 import type { Series } from "../api/types";
 import { Amount } from "../components/amount";
 import { IconBadge } from "../components/icons";
-import { Badge, EmptyState, PageHeader, PageLoader } from "../components/ui";
+import { Badge, EmptyState, GroupLabel, ListSkeleton, PageHeader } from "../components/ui";
 import { formatDate } from "../lib/format";
 import { describeFrequency } from "../lib/labels";
 import SeriesForm from "./SeriesForm";
@@ -23,26 +23,26 @@ function SeriesRow({ s }: { s: Series }) {
   const account = accounts.find((a) => a.id === s.current.account_id);
   return (
     <li>
-      <Link to={`/recurrentes/${s.id}`} className="flex items-center gap-3 px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-        <IconBadge icon={cat?.icon ?? "repeat"} color={cat?.color ?? "#64748b"} />
+      <Link to={`/recurrentes/${s.id}`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/60">
+        <IconBadge icon={cat?.icon ?? "repeat"} color={cat?.color ?? "#71717a"} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="truncate text-sm font-medium">{s.name}</span>
+            <span className="truncate text-sm font-semibold">{s.name}</span>
             {s.is_subscription && <Badge className="bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">Suscripción</Badge>}
             {s.current.amount_mode === "variable" && <Badge>Variable</Badge>}
             {s.pending_count > 0 && (
-              <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400">{s.pending_count} pendiente{s.pending_count > 1 ? "s" : ""}</Badge>
+              <Badge className="bg-warning-soft text-warning">{s.pending_count} pendiente{s.pending_count > 1 ? "s" : ""}</Badge>
             )}
             {s.finished && <Badge>Finalizada</Badge>}
           </div>
-          <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+          <p className="mt-0.5 truncate text-xs text-fg-subtle">
             {describeFrequency(s.current)}
             {account && ` · ${account.name}`}
             {s.next_occurrence && ` · próximo ${formatDate(s.next_occurrence.due_date)}`}
           </p>
         </div>
-        <Amount kind={s.kind} value={s.current.amount} className="text-sm" />
-        <ChevronRight className="size-4 text-slate-300 dark:text-slate-600" />
+        <Amount kind={s.kind} value={s.current.amount} className="text-sm font-semibold" />
+        <ChevronRight className="size-4 text-fg-faint" />
       </Link>
     </li>
   );
@@ -64,7 +64,7 @@ export default function RecurringPage() {
         }
       />
       {isPending ? (
-        <PageLoader />
+        <ListSkeleton rows={8} />
       ) : !data?.length ? (
         <div className="card">
           <EmptyState icon={<CalendarClock className="size-6" />} title="Aún no hay recurrentes">
@@ -72,16 +72,16 @@ export default function RecurringPage() {
           </EmptyState>
         </div>
       ) : (
-        <div className="space-y-5">
+        <div className="space-y-6">
           {GROUPS.map(({ kind, title }) => {
             const items = data.filter((s) => s.kind === kind);
             if (!items.length) return null;
             return (
               <section key={kind}>
-                <h2 className="mb-1.5 px-1 text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
+                <GroupLabel className="mb-2">
                   {title} · {items.length}
-                </h2>
-                <ul className="card divide-y divide-slate-100 dark:divide-slate-800">
+                </GroupLabel>
+                <ul className="card divide-y divide-line overflow-hidden">
                   {items.map((s) => (
                     <SeriesRow key={s.id} s={s} />
                   ))}

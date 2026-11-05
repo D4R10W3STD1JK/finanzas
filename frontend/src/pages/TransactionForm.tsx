@@ -140,7 +140,7 @@ export default function TransactionForm({
         footer={
           <>
             {transactionId && (
-              <button className="btn-ghost mr-auto text-red-600 dark:text-red-400" onClick={() => setConfirmDelete(true)}>
+              <button className="btn-ghost mr-auto text-danger" onClick={() => setConfirmDelete(true)}>
                 <Trash className="size-4" /> Borrar
               </button>
             )}
@@ -165,7 +165,7 @@ export default function TransactionForm({
             <p>
               Ajuste de conciliación del {formatDate(tx.date)}: <Amount kind="adjustment" value={tx.amount} />
             </p>
-            <p className="text-slate-500 dark:text-slate-400">
+            <p className="text-fg-subtle">
               Los ajustes no se editan. Si es incorrecto, bórralo y vuelve a conciliar la cuenta.
             </p>
           </div>
@@ -181,7 +181,7 @@ export default function TransactionForm({
               <Link
                 to={`/recurrentes/${tx.series_id}`}
                 onClick={onClose}
-                className="flex items-center gap-2 rounded-lg bg-sky-50 px-3 py-2 text-sm text-sky-700 hover:underline dark:bg-sky-500/10 dark:text-sky-400"
+                className="flex items-center gap-2 rounded-control bg-accent-soft px-3 py-2.5 text-sm font-medium text-accent-text hover:underline"
               >
                 <Repeat className="size-4" /> Generado por un recurrente. Ver la serie
               </Link>
@@ -233,12 +233,12 @@ export default function TransactionForm({
               <span className="label">Adjuntos</span>
               <ul className="space-y-1.5">
                 {tx?.attachments.map((a) => (
-                  <li key={a.id} className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm dark:border-slate-700">
-                    {a.mime_type.startsWith("image/") ? <Image className="size-4 text-slate-400" /> : <FileText className="size-4 text-slate-400" />}
+                  <li key={a.id} className="flex items-center gap-2 rounded-control border border-line-strong px-3 py-2 text-sm">
+                    {a.mime_type.startsWith("image/") ? <Image className="size-4 text-fg-faint" /> : <FileText className="size-4 text-fg-faint" />}
                     <a href={attachmentUrl(a.id)} target="_blank" rel="noreferrer" className="min-w-0 flex-1 truncate hover:underline">
                       {a.filename}
                     </a>
-                    <span className="text-xs text-slate-400">{formatFileSize(a.size)}</span>
+                    <span className="text-xs text-fg-faint">{formatFileSize(a.size)}</span>
                     <button
                       type="button"
                       className="btn-ghost p-1"
@@ -250,10 +250,10 @@ export default function TransactionForm({
                   </li>
                 ))}
                 {newFiles.map((f, i) => (
-                  <li key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-sm dark:border-slate-700">
-                    <Paperclip className="size-4 text-slate-400" />
+                  <li key={`${f.name}-${i}`} className="flex items-center gap-2 rounded-control border border-dashed border-line-strong px-3 py-2 text-sm">
+                    <Paperclip className="size-4 text-fg-faint" />
                     <span className="min-w-0 flex-1 truncate">{f.name}</span>
-                    <span className="text-xs text-slate-400">{formatFileSize(f.size)}</span>
+                    <span className="text-xs text-fg-faint">{formatFileSize(f.size)}</span>
                     <button type="button" className="btn-ghost p-1" onClick={() => setNewFiles(newFiles.filter((_, j) => j !== i))} aria-label="Quitar">
                       <X className="size-4" />
                     </button>

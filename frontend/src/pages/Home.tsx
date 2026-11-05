@@ -29,7 +29,7 @@ import {
 } from "../components/charts";
 import { IconBadge } from "../components/icons";
 import { OccurrenceList } from "../components/occurrences";
-import { EmptyState, Modal, Skeleton } from "../components/ui";
+import { CardHeader, EmptyState, Modal, Skeleton } from "../components/ui";
 import { useChartTheme } from "../lib/chartTheme";
 import { addDays, formatDate, formatMoney, formatMonth, fromISO, monthRange, todayISO } from "../lib/format";
 import { ACCOUNT_TYPES } from "../lib/labels";
@@ -46,18 +46,6 @@ function greeting(): string {
   if (h >= 6 && h < 14) return "Buenos días";
   if (h >= 14 && h < 21) return "Buenas tardes";
   return "Buenas noches";
-}
-
-function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: ReactNode; action?: ReactNode }) {
-  return (
-    <div className="mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
-      <div>
-        <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
-        {subtitle && <div className="mt-0.5 text-[13px] text-fg-subtle">{subtitle}</div>}
-      </div>
-      {action}
-    </div>
-  );
 }
 
 /** Variación porcentual en una etiqueta de color; `upIsGood` decide si subir es bueno (ingresos) o malo (gastos). */
@@ -421,7 +409,7 @@ export default function HomePage() {
 
       <div className="mt-5 grid items-start gap-5 lg:grid-cols-[5fr_3fr]">
         <section className="card min-w-0 p-5">
-          <SectionHeader
+          <CardHeader
             title="Ingresos y gastos"
             subtitle={<EvolutionLegend inProgress={d.is_current_month && !showTable} />}
             action={
@@ -443,7 +431,7 @@ export default function HomePage() {
         </section>
 
         <section className="card min-w-0 p-5">
-          <SectionHeader
+          <CardHeader
             title="Gastos por categoría"
             subtitle={<span className="inline-block first-letter:uppercase">{formatMonth(d.month)}</span>}
             action={
@@ -488,7 +476,7 @@ export default function HomePage() {
 
       <div className="mt-5 grid items-start gap-5 lg:grid-cols-[5fr_3fr]">
         <section className="card min-w-0 px-5 pt-5 pb-2">
-          <SectionHeader
+          <CardHeader
             title="Próximos 30 días"
             subtitle={
               d.upcoming.count > 0 && (
@@ -527,7 +515,7 @@ export default function HomePage() {
         <div className="grid gap-5">
           {budgets.data && budgets.data.items.length > 0 && (
             <section className="card p-5">
-              <SectionHeader
+              <CardHeader
                 title="Presupuestos"
                 subtitle={budgets.data.is_current_month && `Llevas el ${Number(budgets.data.month_elapsed_pct).toLocaleString("es-ES")} % del mes`}
                 action={
@@ -559,7 +547,7 @@ export default function HomePage() {
           )}
 
           <section className="card px-5 pt-5 pb-2">
-            <SectionHeader
+            <CardHeader
               title="Cuentas"
               action={
                 <Link to="/cuentas" className="link text-[13px]">

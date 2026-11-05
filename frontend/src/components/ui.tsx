@@ -19,6 +19,42 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={clsx("animate-pulse rounded-control bg-surface-2", className)} aria-hidden />;
 }
 
+/** Lista de filas grises mientras carga. */
+export function ListSkeleton({ rows = 6, className }: { rows?: number; className?: string }) {
+  return (
+    <div className={clsx("card divide-y divide-line", className)} aria-busy aria-label="Cargando">
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+          <Skeleton className="size-9 rounded-full" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-3.5 w-2/5" />
+            <Skeleton className="h-3 w-3/5" />
+          </div>
+          <Skeleton className="h-4 w-16" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Título de una tarjeta, con subtítulo y una acción opcional a la derecha. */
+export function CardHeader({ title, subtitle, action, className }: { title: ReactNode; subtitle?: ReactNode; action?: ReactNode; className?: string }) {
+  return (
+    <div className={clsx("mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2", className)}>
+      <div className="min-w-0">
+        <h2 className="text-[15px] font-semibold tracking-tight">{title}</h2>
+        {subtitle && <div className="mt-0.5 text-[13px] text-fg-subtle">{subtitle}</div>}
+      </div>
+      {action}
+    </div>
+  );
+}
+
+/** Rótulo en mayúsculas pequeñas que encabeza un grupo de filas. */
+export function GroupLabel({ children, className }: { children: ReactNode; className?: string }) {
+  return <h3 className={clsx("px-1 text-[11px] font-semibold tracking-wider text-fg-subtle uppercase", className)}>{children}</h3>;
+}
+
 export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-4">

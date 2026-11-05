@@ -186,7 +186,7 @@ function TermsFields({
         </Field>
       </div>
       {monthBased && terms.dayMode === "day" && terms.day > 28 && (
-        <p className="-mt-2 text-xs text-slate-500 dark:text-slate-400">En los meses sin día {terms.day} se usará el último día del mes.</p>
+        <p className="-mt-2 text-xs text-fg-subtle">En los meses sin día {terms.day} se usará el último día del mes.</p>
       )}
 
       <Segmented
@@ -374,7 +374,7 @@ export default function SeriesForm({
     >
       <div className="space-y-4">
         {mode === "terms" && series && (
-          <div className="space-y-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
+          <div className="space-y-3 rounded-control bg-surface-2 p-3">
             <Segmented
               value={scope}
               options={[
@@ -388,7 +388,7 @@ export default function SeriesForm({
                 {(id) => <DateInput id={id} value={effectiveFrom} onChange={setEffectiveFrom} />}
               </Field>
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-fg-subtle">
                 Se aplicará desde el inicio ({formatDate(series.start_date)}). Las ocurrencias ya confirmadas, omitidas o editadas a mano no cambian.
               </p>
             )}
