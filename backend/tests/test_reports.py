@@ -91,6 +91,13 @@ def test_dashboard(db, bank, make_account, cat, income_cat):
     assert len(evo) == 12 and evo[0]["month"] == date(2025, 7, 1) and evo[-1]["month"] == date(2026, 6, 1)
     assert [e["has_data"] for e in evo].count(True) == 3
 
+    # Saldo al cierre de abril y mayo, y a hoy (15/6) en junio
+    hist = {h["month"]: h["balance"] for h in d["balance_history"]}
+    assert len(d["balance_history"]) == 12 and [h["has_data"] for h in d["balance_history"]].count(True) == 3
+    assert hist[date(2026, 4, 1)] == D("1000") + D("1500")
+    assert hist[date(2026, 5, 1)] == D("1000") + D("1500") + D("800")
+    assert hist[date(2026, 6, 1)] == d["total_balance"]
+
     cats = [(c["name"], c["amount"], c["share"]) for c in d["expenses_by_category"]]
     assert cats == [
         ("Vivienda", D("800"), D("76.2")),
@@ -118,6 +125,14 @@ def test_dashboard_de_otro_mes(db, bank, cat):
     assert not d["is_current_month"]
     assert d["current"]["expense"] == D("99.00")
     assert d["evolution"][-1]["month"] == date(2026, 2, 1)
+    assert d["balance_history"][-1]["balance"] is not None
+
+
+def test_dashboard_mes_futuro(db):
+    d = dashboard(db, date(2026, 8, 1), TODAY)
+    hist = d["balance_history"]
+    assert hist[-1]["month"] == date(2026, 8, 1) and hist[-1]["balance"] is None
+    assert hist[-3]["balance"] is not None  # junio, el mes en curso
 
 
 def test_coste_mensual_equivalente_y_suscripciones(db, bank, cat, income_cat):

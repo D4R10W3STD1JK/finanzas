@@ -9,11 +9,11 @@ import { CategorySelect, MoneyInput } from "../components/inputs";
 import { ConfirmDialog, EmptyState, ErrorBox, Field, Modal, PageHeader, PageLoader, Spinner } from "../components/ui";
 import { formatMoney, formatMonth, monthRange, todayISO } from "../lib/format";
 
-// Medidor: el relleno marca la gravedad (azul → ámbar → rojo); la pista es un tono claro de la misma gama.
+// Medidor: el relleno marca la gravedad (acento → ámbar → rojo); la pista es un tono suave de la misma gama.
 const TONES = {
-  ok: { fill: "bg-sky-500", track: "bg-sky-100 dark:bg-sky-950", label: "En marcha", icon: CircleCheck, text: "text-sky-700 dark:text-sky-400" },
-  warning: { fill: "bg-amber-500", track: "bg-amber-100 dark:bg-amber-950", label: "Cerca del límite", icon: CircleAlert, text: "text-amber-700 dark:text-amber-400" },
-  over: { fill: "bg-red-500", track: "bg-red-100 dark:bg-red-950", label: "Superado", icon: TriangleAlert, text: "text-red-700 dark:text-red-400" },
+  ok: { fill: "bg-accent", track: "bg-track", label: "En marcha", icon: CircleCheck, text: "text-accent-text" },
+  warning: { fill: "bg-warning", track: "bg-warning-soft", label: "Cerca del límite", icon: CircleAlert, text: "text-warning" },
+  over: { fill: "bg-danger", track: "bg-danger-soft", label: "Superado", icon: TriangleAlert, text: "text-danger" },
 } as const;
 
 type Tone = keyof typeof TONES;

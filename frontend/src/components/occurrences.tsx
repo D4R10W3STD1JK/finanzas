@@ -4,18 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { useCategories, useConfirmOccurrence, useEditOccurrence, useOccurrenceAction } from "../api/hooks";
 import type { Occurrence } from "../api/types";
-import { formatDate, formatDateShort, formatMoney, relativeDay, todayISO } from "../lib/format";
+import { formatDate, formatDateShort, formatMoney, fromISO, relativeDay, todayISO } from "../lib/format";
 import { Amount } from "./amount";
 import { IconBadge } from "./icons";
 import { AccountSelect, CategorySelect, DateInput, MoneyInput } from "./inputs";
 import { Badge, ErrorBox, Field, Modal, Spinner } from "./ui";
 
 export function StatusBadge({ occ }: { occ: Occurrence }) {
-  if (occ.status === "confirmed") return <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400">Confirmada</Badge>;
+  if (occ.status === "confirmed") return <Badge className="bg-positive-soft text-positive">Confirmada</Badge>;
   if (occ.status === "skipped") return <Badge>Omitida</Badge>;
   if (occ.due_date < todayISO())
-    return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400">Pendiente</Badge>;
-  return <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-400">Prevista</Badge>;
+    return <Badge className="bg-warning-soft text-warning">Pendiente</Badge>;
+  return <Badge className="bg-accent-soft text-accent-text">Prevista</Badge>;
 }
 
 /** Confirmar una ocurrencia: permite indicar el importe real (imprescindible en las variables). */
@@ -63,7 +63,7 @@ export function ConfirmOccurrenceModal({ occ, onClose }: { occ: Occurrence | nul
     >
       <div className="space-y-4">
         {occ.amount_mode === "variable" && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-fg-subtle">
             Importe estimado: <strong className="amount">{formatMoney(occ.expected_amount)}</strong>. Indica el importe real del recibo.
           </p>
         )}
@@ -128,7 +128,7 @@ export function EditOccurrenceModal({ occ, onClose }: { occ: Occurrence | null; 
       }
     >
       <div className="space-y-4">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
+        <p className="text-sm text-fg-subtle">
           Prevista para el {formatDate(occ.scheduled_date)}. El resto de la serie no cambia y esta ocurrencia ya no se confirmará sola.
         </p>
         <Field label={occ.amount_mode === "variable" ? "Importe estimado" : "Importe"}>
@@ -172,17 +172,17 @@ function ActionsMenu({ occ, onEdit, onConfirm }: { occ: Occurrence; onEdit: () =
         {action.isPending ? <Spinner className="size-4" /> : <MoreHorizontal className="size-4" />}
       </button>
       {open && (
-        <div className="absolute right-0 z-10 mt-1 w-60 rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+        <div className="absolute right-0 z-10 mt-1 w-60 rounded-control border border-line bg-surface p-1 shadow-overlay">
           {items.map(({ label, icon: I, run }) => (
             <button
               key={label}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm hover:bg-surface-2"
               onClick={() => {
                 setOpen(false);
                 run();
               }}
             >
-              <I className="size-4 text-slate-400" />
+              <I className="size-4 text-fg-subtle" />
               {label}
             </button>
           ))}
@@ -192,8 +192,22 @@ function ActionsMenu({ occ, onEdit, onConfirm }: { occ: Occurrence; onEdit: () =
   );
 }
 
-/** Lista de ocurrencias con acciones (confirmar, editar, omitir...). */
-export function OccurrenceList({ items, showSeries = true }: { items: Occurrence[]; showSeries?: boolean }) {
+/** Día y mes en un bloque, para listas ordenadas por fecha. */
+function DateBlock({ iso }: { iso: string }) {
+  const d = fromISO(iso);
+  return (
+    <span className="flex size-11 shrink-0 flex-col items-center justify-center rounded-control bg-surface-2 leading-none" aria-hidden>
+      <span className="amount text-[15px] font-bold">{d.getDate()}</span>
+      <span className="mt-0.5 text-[10px] font-semibold text-fg-subtle uppercase">{d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "")}</span>
+    </span>
+  );
+}
+
+/**
+ * Lista de ocurrencias con acciones (confirmar, editar, omitir...).
+ * Con `dateBlock`, cada fila empieza por la fecha en vez del icono de la categoría.
+ */
+export function OccurrenceList({ items, showSeries = true, dateBlock = false }: { items: Occurrence[]; showSeries?: boolean; dateBlock?: boolean }) {
   const { data: categories = [] } = useCategories();
   const [confirming, setConfirming] = useState<Occurrence | null>(null);
   const [editing, setEditing] = useState<Occurrence | null>(null);
@@ -201,18 +215,23 @@ export function OccurrenceList({ items, showSeries = true }: { items: Occurrence
 
   return (
     <>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      <ul className="divide-y divide-line">
         {items.map((occ) => {
           const cat = categories.find((c) => c.id === occ.category_id);
           const amount = occ.actual_amount ?? occ.expected_amount;
+          const upcoming = occ.status === "planned" && occ.due_date >= today;
           return (
-            <li key={occ.id} className={clsx("flex items-center gap-3 py-2.5", occ.status === "skipped" && "opacity-50")}>
-              {showSeries &&
-                (cat ? <IconBadge icon={cat.icon} color={cat.color} size="sm" /> : <IconBadge icon="repeat" color="#64748b" size="sm" />)}
+            <li key={occ.id} className={clsx("flex items-center gap-3", dateBlock ? "py-3" : "py-2.5", occ.status === "skipped" && "opacity-50")}>
+              {dateBlock ? (
+                <DateBlock iso={occ.due_date} />
+              ) : (
+                showSeries &&
+                (cat ? <IconBadge icon={cat.icon} color={cat.color} size="sm" /> : <IconBadge icon="repeat" color="#64748b" size="sm" />)
+              )}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   {showSeries ? (
-                    <Link to={`/recurrentes/${occ.series_id}`} className="truncate text-sm font-medium hover:underline">
+                    <Link to={`/recurrentes/${occ.series_id}`} className="truncate text-sm font-semibold hover:underline">
                       {occ.series_name}
                     </Link>
                   ) : (
@@ -220,21 +239,30 @@ export function OccurrenceList({ items, showSeries = true }: { items: Occurrence
                   )}
                   {occ.is_overridden && occ.status === "planned" && (
                     <span title="Editada a mano">
-                      <Pencil className="size-3 text-slate-400" />
+                      <Pencil className="size-3 text-fg-faint" />
                     </span>
                   )}
+                  {dateBlock && occ.amount_mode === "variable" && occ.status === "planned" && <Badge>Estimado</Badge>}
                 </div>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  {showSeries && (
-                    <span>
-                      {formatDateShort(occ.due_date)} · {relativeDay(occ.due_date, today)}
+                <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-fg-subtle">
+                  {dateBlock ? (
+                    <span className="truncate">
+                      <span className="inline-block first-letter:uppercase">{relativeDay(occ.due_date, today)}</span>
+                      {cat && ` · ${cat.name}`}
                     </span>
+                  ) : (
+                    showSeries && (
+                      <span>
+                        {formatDateShort(occ.due_date)} · {relativeDay(occ.due_date, today)}
+                      </span>
+                    )
                   )}
-                  <StatusBadge occ={occ} />
-                  {occ.amount_mode === "variable" && occ.status === "planned" && <span>estimado</span>}
+                  {/* En la vista por fechas, «Prevista» es lo normal: solo se marca lo que no lo es. */}
+                  {!(dateBlock && upcoming) && <StatusBadge occ={occ} />}
+                  {!dateBlock && occ.amount_mode === "variable" && occ.status === "planned" && <span>estimado</span>}
                 </div>
               </div>
-              <Amount kind={occ.kind} value={amount} className="text-sm" />
+              <Amount kind={occ.kind} value={amount} className="text-sm font-semibold" />
               {occ.status === "planned" && occ.due_date <= today && (
                 <button className="btn-secondary px-2.5 py-1.5 text-xs" onClick={() => setConfirming(occ)} title="Confirmar">
                   <Check className="size-3.5" />

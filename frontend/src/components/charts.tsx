@@ -36,13 +36,13 @@ export function niceTicks(min: number, max: number, target = 4, includeZero = tr
 
 function TooltipBox({ title, rows }: { title: string; rows: { color?: string; label: string; value: string }[] }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-lg dark:border-slate-700 dark:bg-slate-800">
-      <p className="mb-1 font-semibold first-letter:uppercase">{title}</p>
+    <div className="min-w-40 rounded-control border border-line bg-surface px-3 py-2.5 text-xs shadow-overlay">
+      <p className="mb-1.5 font-semibold first-letter:uppercase">{title}</p>
       {rows.map((r) => (
-        <p key={r.label} className="flex items-center gap-2">
+        <p key={r.label} className="flex items-center gap-2 py-0.5">
           {r.color && <span className="size-2.5 rounded-sm" style={{ backgroundColor: r.color }} />}
-          <span className="text-slate-500 dark:text-slate-400">{r.label}</span>
-          <span className="amount ml-auto pl-3 font-medium">{r.value}</span>
+          <span className="text-fg-subtle">{r.label}</span>
+          <span className="amount ml-auto pl-3 font-semibold">{r.value}</span>
         </p>
       ))}
     </div>
@@ -122,9 +122,9 @@ export function CategoryDonut({
         </PieChart>
       </ResponsiveContainer>
       <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="max-w-[60%] truncate text-xs text-slate-500 dark:text-slate-400">{current ? current.name : "Total gastos"}</span>
-        <span className="amount text-lg font-semibold">{formatMoney(current ? current.value : total)}</span>
-        {current && <span className="text-xs text-slate-500 dark:text-slate-400">{current.share.toLocaleString("es-ES")} %</span>}
+        <span className="max-w-[60%] truncate text-xs text-fg-subtle">{current ? current.name : "Total gastos"}</span>
+        <span className="amount text-lg font-bold tracking-tight">{formatMoney(current ? current.value : total)}</span>
+        {current && <span className="text-xs text-fg-subtle">{current.share.toLocaleString("es-ES")} %</span>}
       </div>
     </div>
   );
@@ -132,24 +132,52 @@ export function CategoryDonut({
 
 // --- Evolución mensual ---
 
-export function MonthlyEvolutionChart({ data }: { data: MonthFlow[] }) {
+export function MonthlyEvolutionChart({ data, lastInProgress = false }: { data: MonthFlow[]; lastInProgress?: boolean }) {
   const theme = useChartTheme();
-  const rows = data.map((m) => ({
-    month: m.month,
-    label: monthShort(m.month),
-    income: m.has_data ? Number(m.income) : null,
-    expense: m.has_data ? Number(m.expense) : null,
-    savings: m.has_data ? Number(m.savings) : null,
-  }));
+  const last = data.length - 1;
+  const rows = data.map((m, i) => {
+    const savings = m.has_data ? Number(m.savings) : null;
+    // El mes en curso aún no ha terminado: su ahorro se une con una línea discontinua para no
+    // leerlo como un desplome.
+    const partial = lastInProgress && i === last;
+    return {
+      month: m.month,
+      label: monthShort(m.month),
+      income: m.has_data ? Number(m.income) : null,
+      expense: m.has_data ? Number(m.expense) : null,
+      savings: partial ? null : savings,
+      savingsPartial: lastInProgress && i >= last - 1 ? savings : null,
+      partial,
+    };
+  });
 
-  const values = rows.flatMap((r) => [r.income, r.expense, r.savings]).filter((v): v is number => v !== null);
+  const values = rows.flatMap((r) => [r.income, r.expense, r.savings, r.savingsPartial]).filter((v): v is number => v !== null);
   const ticks = niceTicks(Math.min(0, ...values), Math.max(0, ...values));
+  const lastLabel = rows[last]?.label;
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2} barCategoryGap="22%">
+    <ResponsiveContainer width="100%" height={280}>
+      <ComposedChart data={rows} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={3} barCategoryGap="24%">
         <CartesianGrid vertical={false} stroke={theme.grid} strokeWidth={1} />
-        <XAxis dataKey="label" tickLine={false} axisLine={{ stroke: theme.grid }} tick={{ fill: theme.axis, fontSize: 11 }} interval="preserveStartEnd" minTickGap={4} />
+        <XAxis
+          dataKey="label"
+          tickLine={false}
+          axisLine={{ stroke: theme.grid }}
+          interval="preserveStartEnd"
+          minTickGap={4}
+          tick={({ x, y, payload }) => (
+            <text
+              x={x}
+              y={Number(y) + 12}
+              textAnchor="middle"
+              fontSize={11}
+              fontWeight={payload.value === lastLabel ? 700 : 500}
+              fill={payload.value === lastLabel ? "var(--fg)" : theme.axis}
+            >
+              {payload.value}
+            </text>
+          )}
+        />
         <YAxis
           ticks={ticks}
           domain={[ticks[0], ticks[ticks.length - 1]]}
@@ -159,55 +187,108 @@ export function MonthlyEvolutionChart({ data }: { data: MonthFlow[] }) {
           tick={{ fill: theme.axis, fontSize: 11 }}
           width={64}
         />
+        <ReferenceLine y={0} stroke={theme.muted} />
         <Tooltip
-          cursor={{ fill: theme.grid, fillOpacity: 0.5 }}
+          cursor={{ fill: theme.grid, fillOpacity: 0.5, radius: 6 }}
           content={({ active, payload }) => {
             if (!active || !payload?.length) return null;
             const row = payload[0].payload as (typeof rows)[number];
-            if (row.income === null) return <TooltipBox title={formatMonth(row.month)} rows={[{ label: "Sin datos", value: "" }]} />;
+            const title = formatMonth(row.month) + (row.partial ? " (en curso)" : "");
+            if (row.income === null) return <TooltipBox title={title} rows={[{ label: "Sin datos", value: "" }]} />;
             return (
               <TooltipBox
-                title={formatMonth(row.month)}
+                title={title}
                 rows={[
                   { color: theme.income, label: "Ingresos", value: formatMoney(row.income) },
                   { color: theme.expense, label: "Gastos", value: formatMoney(row.expense) },
-                  { color: theme.savings, label: "Ahorro", value: formatMoney(row.savings) },
+                  { color: theme.savings, label: "Ahorro", value: formatMoney(row.savings ?? row.savingsPartial) },
                 ]}
               />
             );
           }}
         />
-        <Bar dataKey="income" name="Ingresos" fill={theme.income} maxBarSize={20} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-        <Bar dataKey="expense" name="Gastos" fill={theme.expense} maxBarSize={20} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+        <Bar dataKey="income" name="Ingresos" fill={theme.income} maxBarSize={16} radius={[4, 4, 1, 1]} isAnimationActive={false} />
+        <Bar dataKey="expense" name="Gastos" fill={theme.expense} maxBarSize={16} radius={[4, 4, 1, 1]} isAnimationActive={false} />
         <Line
           dataKey="savings"
           name="Ahorro"
           type="monotone"
           stroke={theme.savings}
           strokeWidth={2}
-          dot={{ r: 4, fill: theme.savings, stroke: theme.surface, strokeWidth: 2 }}
+          dot={{ r: 3.5, fill: theme.savings, stroke: theme.surface, strokeWidth: 2 }}
           activeDot={{ r: 5, fill: theme.savings, stroke: theme.surface, strokeWidth: 2 }}
           connectNulls={false}
           isAnimationActive={false}
         />
+        {lastInProgress && (
+          <Line
+            dataKey="savingsPartial"
+            name="Ahorro (en curso)"
+            type="monotone"
+            stroke={theme.savings}
+            strokeWidth={2}
+            strokeDasharray="4 4"
+            dot={(p: { cx?: number; cy?: number; index?: number }) =>
+              p.index === last && p.cx !== undefined && p.cy !== undefined ? (
+                <circle key="partial" cx={p.cx} cy={p.cy} r={3.5} fill={theme.surface} stroke={theme.savings} strokeWidth={2} />
+              ) : (
+                <g key={p.index} />
+              )
+            }
+            activeDot={false}
+            legendType="none"
+            tooltipType="none"
+            connectNulls={false}
+            isAnimationActive={false}
+          />
+        )}
       </ComposedChart>
     </ResponsiveContainer>
   );
 }
 
-export function EvolutionLegend() {
+/** Línea de tendencia del saldo total (sin ejes): un vistazo a cómo ha ido el último año. */
+export function BalanceSparkline({ values, label, className }: { values: number[]; label: string; className?: string }) {
+  if (values.length < 2) return null;
+  const W = 240;
+  const H = 72;
+  const pad = 6;
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const span = hi - lo || 1;
+  const pts = values.map((v, i) => [pad + (i * (W - 2 * pad)) / (values.length - 1), pad + (1 - (v - lo) / span) * (H - 2 * pad)]);
+  const line = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)} ${y.toFixed(1)}`).join(" ");
+  const [lx] = pts[pts.length - 1];
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" role="img" aria-label={label} className={className}>
+      <defs>
+        <linearGradient id="spark-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--accent)" stopOpacity={0.2} />
+          <stop offset="1" stopColor="var(--accent)" stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      <path d={`${line} L${lx.toFixed(1)} ${H} L${pad} ${H} Z`} fill="url(#spark-fill)" />
+      <path d={line} fill="none" stroke="var(--accent)" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+export function EvolutionLegend({ inProgress = false }: { inProgress?: boolean }) {
   const theme = useChartTheme();
   const items = [
     { label: "Ingresos", color: theme.income, kind: "bar" },
     { label: "Gastos", color: theme.expense, kind: "bar" },
     { label: "Ahorro (ingresos − gastos)", color: theme.savings, kind: "line" },
+    ...(inProgress ? [{ label: "Mes en curso", color: theme.savings, kind: "dashed" }] : []),
   ];
   return (
-    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
+    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs font-medium text-fg-muted">
       {items.map((i) => (
         <span key={i.label} className="flex items-center gap-1.5">
           {i.kind === "bar" ? (
             <span className="size-2.5 rounded-sm" style={{ backgroundColor: i.color }} />
+          ) : i.kind === "dashed" ? (
+            <span className="w-3.5 border-t-2 border-dashed" style={{ borderColor: i.color }} />
           ) : (
             <span className="h-0.5 w-3.5 rounded" style={{ backgroundColor: i.color }} />
           )}
@@ -223,8 +304,8 @@ export function EvolutionTable({ data }: { data: MonthFlow[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="text-xs text-slate-500 dark:text-slate-400">
-          <tr className="border-b border-slate-100 dark:border-slate-800">
+        <thead className="text-xs text-fg-subtle">
+          <tr className="border-b border-line">
             <th className="py-2 text-left font-medium">Mes</th>
             <th className="py-2 text-right font-medium">Ingresos</th>
             <th className="py-2 text-right font-medium">Gastos</th>
@@ -234,7 +315,7 @@ export function EvolutionTable({ data }: { data: MonthFlow[] }) {
         </thead>
         <tbody>
           {[...data].reverse().map((m) => (
-            <tr key={m.month} className="border-b border-slate-50 last:border-0 dark:border-slate-800/60">
+            <tr key={m.month} className="border-b border-line/60 last:border-0">
               <td className="py-1.5 capitalize">{formatMonth(m.month)}</td>
               {m.has_data ? (
                 <>
@@ -244,7 +325,7 @@ export function EvolutionTable({ data }: { data: MonthFlow[] }) {
                   <td className="amount py-1.5 text-right">{m.savings_rate !== null ? `${Number(m.savings_rate).toLocaleString("es-ES")} %` : "—"}</td>
                 </>
               ) : (
-                <td colSpan={4} className="py-1.5 text-right text-slate-400">
+                <td colSpan={4} className="py-1.5 text-right text-fg-faint">
                   Sin datos
                 </td>
               )}
@@ -341,7 +422,7 @@ export function ForecastChart({ data }: { data: Forecast }) {
       </ComposedChart>
     </ResponsiveContainer>
     {!showThreshold && threshold <= hi && (
-      <p className="text-xs text-slate-500 dark:text-slate-400">
+      <p className="text-xs text-fg-subtle">
         El umbral de aviso ({formatMoney(threshold)}) queda muy por debajo de la previsión y no se dibuja.
       </p>
     )}

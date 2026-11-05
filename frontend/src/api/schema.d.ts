@@ -941,6 +941,18 @@ export interface components {
             /** Balance */
             balance: string;
         };
+        /** BalancePointOut */
+        BalancePointOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** Balance */
+            balance: string | null;
+            /** Has Data */
+            has_data: boolean;
+        };
         /** Body_import__api_data_import_post */
         Body_import__api_data_import_post: {
             /** File */
@@ -1242,6 +1254,8 @@ export interface components {
             expenses_by_category: components["schemas"]["CategoryExpenseOut"][];
             /** Evolution */
             evolution: components["schemas"]["MonthFlowOut"][];
+            /** Balance History */
+            balance_history: components["schemas"]["BalancePointOut"][];
             upcoming: components["schemas"]["UpcomingOut"];
             /** Pending Count */
             pending_count: number;

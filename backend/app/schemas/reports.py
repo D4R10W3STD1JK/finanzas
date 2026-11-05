@@ -41,6 +41,13 @@ class UpcomingOut(Schema):
     count: int
 
 
+class BalancePointOut(Schema):
+    month: date
+    # Saldo total al cierre del mes (hoy en el mes en curso); None si el mes aún no ha empezado.
+    balance: Money | None
+    has_data: bool
+
+
 class DashboardOut(Schema):
     month: date
     is_current_month: bool
@@ -52,6 +59,7 @@ class DashboardOut(Schema):
     last_12_months: FlowOut
     expenses_by_category: list[CategoryExpenseOut]
     evolution: list[MonthFlowOut]
+    balance_history: list[BalancePointOut]
     upcoming: UpcomingOut
     pending_count: int
 

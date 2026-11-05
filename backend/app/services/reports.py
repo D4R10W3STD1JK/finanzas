@@ -171,8 +171,11 @@ def dashboard(db: Session, month: date, today: date) -> dict:
         )
     )
 
+    included = list(
+        db.scalars(select(Account.id).where(Account.include_in_total.is_(True), Account.archived.is_(False)))
+    )
     balances = account_balances(db, as_of=today)
-    included = db.scalars(select(Account.id).where(Account.include_in_total.is_(True), Account.archived.is_(False)))
+    balance_history = _balance_history(db, months, included, first, today)
 
     return {
         "month": month,
@@ -185,9 +188,25 @@ def dashboard(db: Session, month: date, today: date) -> dict:
         "last_12_months": _flow_out(year),
         "expenses_by_category": expenses_by_category(db, month, add_months(month, 1)),
         "evolution": evolution,
+        "balance_history": balance_history,
         "upcoming": {"income": money(up_income), "expense": money(up_expense), "count": len(upcoming)},
         "pending_count": pending,
     }
+
+
+def _balance_history(
+    db: Session, months: list[date], included: list[int], first: date | None, today: date
+) -> list[dict]:
+    """Saldo total al cierre de cada mes (o a hoy en el mes en curso); None en los meses aún por llegar."""
+    out = []
+    for m in months:
+        as_of = min(add_months(m, 1) - timedelta(days=1), today)
+        balance = None
+        if m <= today:
+            balances = account_balances(db, as_of=as_of)
+            balance = money(sum((balances[i] for i in included), ZERO))
+        out.append({"month": m, "balance": balance, "has_data": bool(first and m >= first)})
+    return out
 
 
 # --- Coste mensual equivalente ---
