@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { useAccounts, useCategories, useRecurringCosts } from "../api/hooks";
 import { IconBadge } from "../components/icons";
-import { Badge, EmptyState, PageHeader, PageLoader, Segmented } from "../components/ui";
+import { Badge, EmptyState, PageHeader, PageSkeleton, Segmented } from "../components/ui";
 import { daysBetween, formatDate, formatMoney, todayISO } from "../lib/format";
 import { describeFrequency } from "../lib/labels";
 
@@ -23,7 +23,7 @@ export default function SubscriptionsPage() {
   const [sort, setSort] = useState<Sort>("renewal");
   const today = todayISO();
 
-  if (isPending) return <PageLoader />;
+  if (isPending) return <PageSkeleton />;
   const subs = (data?.items ?? []).filter((i) => i.is_subscription);
   subs.sort((a, b) =>
     sort === "cost"
@@ -43,22 +43,22 @@ export default function SubscriptionsPage() {
       ) : (
         <>
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="card p-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Al mes</p>
-              <p className="amount mt-1 text-2xl font-semibold">{formatMoney(data!.subscriptions.monthly)}</p>
+            <div className="card p-5">
+              <p className="stat-label">Al mes</p>
+              <p className="stat-value">{formatMoney(data!.subscriptions.monthly)}</p>
             </div>
-            <div className="card p-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Al año</p>
-              <p className="amount mt-1 text-2xl font-semibold">{formatMoney(data!.subscriptions.annual)}</p>
+            <div className="card p-5">
+              <p className="stat-label">Al año</p>
+              <p className="stat-value">{formatMoney(data!.subscriptions.annual)}</p>
             </div>
-            <div className="card p-4">
-              <p className="text-sm text-slate-500 dark:text-slate-400">Suscripciones activas</p>
-              <p className="mt-1 text-2xl font-semibold">{subs.length}</p>
+            <div className="card p-5">
+              <p className="stat-label">Suscripciones activas</p>
+              <p className="stat-value">{subs.length}</p>
             </div>
           </div>
 
           <div className="mt-6 mb-3 flex items-center justify-between gap-3">
-            <h2 className="font-semibold">Detalle</h2>
+            <h2 className="card-title">Detalle</h2>
             <div className="w-64">
               <Segmented
                 value={sort}
@@ -81,28 +81,28 @@ export default function SubscriptionsPage() {
                     <IconBadge icon={cat?.icon ?? "repeat"} color={cat?.color ?? "#8b5cf6"} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{s.name}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                      <p className="text-xs text-fg-subtle">
                         {formatMoney(s.base_amount)} · {describeFrequency(s).toLowerCase()}
                       </p>
                     </div>
                   </div>
                   <div className="mt-3 flex items-baseline gap-1.5">
                     <span className="amount text-xl font-semibold">{formatMoney(s.monthly)}</span>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">/mes · {formatMoney(s.annual)}/año</span>
+                    <span className="text-xs text-fg-subtle">/mes · {formatMoney(s.annual)}/año</span>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-xs dark:border-slate-800">
+                  <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line pt-3 text-xs">
                     <Badge
                       className={
                         renewal.soon
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-400"
-                          : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                          ? "bg-warning-soft text-warning"
+                          : "bg-surface-2 text-fg-muted"
                       }
                     >
                       {renewal.text}
                     </Badge>
-                    {s.next_due_date && <span className="text-slate-500 dark:text-slate-400">{formatDate(s.next_due_date)}</span>}
+                    {s.next_due_date && <span className="text-fg-subtle">{formatDate(s.next_due_date)}</span>}
                   </div>
-                  <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-2 text-xs text-fg-subtle">
                     {s.last_12m_count > 0 ? `Pagado en los últimos 12 meses: ${formatMoney(s.last_12m_total)}` : "Aún sin pagos registrados"}
                     {account && ` · ${account.name}`}
                   </p>

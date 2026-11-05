@@ -6,15 +6,15 @@ import { useAccounts, useAddContribution, useDeleteContribution, useDeleteGoal, 
 import type { Goal, GoalMode } from "../api/types";
 import { IconBadge } from "../components/icons";
 import { AccountSelect, ColorPicker, DateInput, IconPicker, MoneyInput } from "../components/inputs";
-import { Checkbox, ConfirmDialog, EmptyState, ErrorBox, Field, Modal, PageHeader, PageLoader, Segmented, Spinner } from "../components/ui";
+import { Checkbox, ConfirmDialog, EmptyState, ErrorBox, Field, Modal, PageHeader, PageSkeleton, Segmented, Spinner } from "../components/ui";
 import { formatDate, formatMoney, todayISO } from "../lib/format";
 
 const STATUS: Record<string, { label: string; className: string }> = {
-  completed: { label: "¡Conseguido!", className: "text-emerald-700 dark:text-emerald-400" },
-  on_track: { label: "Vas bien", className: "text-emerald-700 dark:text-emerald-400" },
-  behind: { label: "Vas por detrás del ritmo", className: "text-amber-700 dark:text-amber-400" },
-  overdue: { label: "Se pasó la fecha", className: "text-red-700 dark:text-red-400" },
-  no_date: { label: "Sin fecha límite", className: "text-slate-500 dark:text-slate-400" },
+  completed: { label: "¡Conseguido!", className: "text-positive" },
+  on_track: { label: "Vas bien", className: "text-positive" },
+  behind: { label: "Vas por detrás del ritmo", className: "text-warning" },
+  overdue: { label: "Se pasó la fecha", className: "text-danger" },
+  no_date: { label: "Sin fecha límite", className: "text-fg-subtle" },
 };
 
 function GoalForm({ open, goal, onClose }: { open: boolean; goal: Goal | null; onClose: () => void }) {
@@ -57,7 +57,7 @@ function GoalForm({ open, goal, onClose }: { open: boolean; goal: Goal | null; o
         footer={
           <>
             {goal && (
-              <button className="btn-ghost mr-auto text-red-600 dark:text-red-400" onClick={() => setConfirmDelete(true)}>
+              <button className="btn-ghost mr-auto text-danger" onClick={() => setConfirmDelete(true)}>
                 Borrar
               </button>
             )}
@@ -121,7 +121,7 @@ function GoalForm({ open, goal, onClose }: { open: boolean; goal: Goal | null; o
               {(id) => <AccountSelect id={id} value={accountId} onChange={setAccountId} />}
             </Field>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-sm text-fg-subtle">
               Irás apuntando lo que apartas (y lo que retiras) para este objetivo. No mueve dinero entre cuentas.
             </p>
           )}
@@ -217,7 +217,7 @@ function GoalCard({ goal, onEdit, onContribute }: { goal: Goal; onEdit: () => vo
         <IconBadge icon={done ? "star" : goal.icon} color={goal.color} />
         <div className="min-w-0 flex-1">
           <p className="truncate font-medium">{goal.name}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-fg-subtle">
             {goal.mode === "account" ? (
               <>
                 Saldo de <Link to={`/movimientos?cuenta=${goal.account_id}`} className="hover:underline">{account?.name ?? "la cuenta"}</Link>
@@ -235,7 +235,7 @@ function GoalCard({ goal, onEdit, onContribute }: { goal: Goal; onEdit: () => vo
 
       <div className="mt-4 flex items-baseline justify-between gap-2">
         <span className="amount text-2xl font-semibold">{formatMoney(goal.current)}</span>
-        <span className="text-sm text-slate-500 dark:text-slate-400">
+        <span className="text-sm text-fg-subtle">
           de <span className="amount">{formatMoney(goal.target_amount)}</span> · {Number(goal.pct).toLocaleString("es-ES", { maximumFractionDigits: 0 })} %
         </span>
       </div>
@@ -249,7 +249,7 @@ function GoalCard({ goal, onEdit, onContribute }: { goal: Goal; onEdit: () => vo
         {done && <Trophy className="size-4" aria-hidden />}
         {status.label}
       </p>
-      <div className="mt-1 space-y-0.5 text-sm text-slate-600 dark:text-slate-300">
+      <div className="mt-1 space-y-0.5 text-sm text-fg-muted">
         {goal.monthly_needed && !done && (
           <p>
             Necesitas <strong className="amount">{formatMoney(goal.monthly_needed)}/mes</strong>{" "}
@@ -262,14 +262,14 @@ function GoalCard({ goal, onEdit, onContribute }: { goal: Goal; onEdit: () => vo
           </p>
         )}
         {goal.monthly_pace !== null && Number(goal.monthly_pace) !== 0 && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-xs text-fg-subtle">
             Ritmo de los últimos 3 meses: {formatMoney(goal.monthly_pace)}/mes
           </p>
         )}
       </div>
 
       {goal.mode === "manual" && (
-        <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-3">
           <button className="btn-secondary px-2.5 py-1.5 text-xs" onClick={() => onContribute(1)}>
             <Plus className="size-3.5" /> Aportar
           </button>
@@ -284,10 +284,10 @@ function GoalCard({ goal, onEdit, onContribute }: { goal: Goal; onEdit: () => vo
         </div>
       )}
       {showHistory && (
-        <ul className="mt-2 divide-y divide-slate-100 text-sm dark:divide-slate-800">
+        <ul className="mt-2 divide-y divide-line text-sm">
           {goal.contributions.map((c) => (
             <li key={c.id} className="flex items-center gap-2 py-1.5">
-              <span className="text-xs text-slate-500 dark:text-slate-400">{formatDate(c.date)}</span>
+              <span className="text-xs text-fg-subtle">{formatDate(c.date)}</span>
               <span className="min-w-0 flex-1 truncate text-xs">{c.notes}</span>
               <span className={clsx("amount", Number(c.amount) < 0 && "text-expense")}>{formatMoney(c.amount, { sign: true })}</span>
               <button
@@ -311,7 +311,7 @@ export default function GoalsPage() {
   const [form, setForm] = useState<{ goal: Goal | null } | null>(null);
   const [contributing, setContributing] = useState<{ goal: Goal; sign: 1 | -1 } | null>(null);
 
-  if (isPending) return <PageLoader />;
+  if (isPending) return <PageSkeleton />;
   const list = goals ?? [];
   const active = list.filter((g) => !g.archived);
   const saved = active.reduce((s, g) => s + Math.max(0, Number(g.current)), 0);

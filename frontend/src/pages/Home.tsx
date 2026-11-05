@@ -5,7 +5,6 @@ import {
   CalendarCheck,
   CalendarClock,
   ChartColumn,
-  ChevronLeft,
   ChevronRight,
   Gauge,
   type LucideIcon,
@@ -29,7 +28,7 @@ import {
 } from "../components/charts";
 import { IconBadge } from "../components/icons";
 import { OccurrenceList } from "../components/occurrences";
-import { CardHeader, EmptyState, Modal, Skeleton } from "../components/ui";
+import { CardHeader, EmptyState, Modal, MonthSwitcher, Skeleton } from "../components/ui";
 import { useChartTheme } from "../lib/chartTheme";
 import { addDays, formatDate, formatMoney, formatMonth, fromISO, monthRange, todayISO } from "../lib/format";
 import { ACCOUNT_TYPES } from "../lib/labels";
@@ -261,17 +260,7 @@ export default function HomePage() {
               Volver a hoy
             </button>
           )}
-          <div className="card flex items-center rounded-control p-0.5">
-            <button className="btn-ghost p-2" onClick={() => setOffset(offset - 1)} aria-label="Mes anterior">
-              <ChevronLeft className="size-4" />
-            </button>
-            <span className="min-w-32 text-center text-sm font-semibold first-letter:uppercase" aria-live="polite">
-              {formatMonth(d.month)}
-            </span>
-            <button className="btn-ghost p-2" onClick={() => setOffset(offset + 1)} aria-label="Mes siguiente">
-              <ChevronRight className="size-4" />
-            </button>
-          </div>
+          <MonthSwitcher label={formatMonth(d.month)} onPrev={() => setOffset(offset - 1)} onNext={() => setOffset(offset + 1)} />
           {/* En el móvil ya está el botón «+» de la barra inferior. */}
           <button className="btn-primary hidden min-h-10 lg:inline-flex" onClick={() => setCreating(true)}>
             <Plus className="size-4" /> Nuevo movimiento
@@ -368,8 +357,16 @@ export default function HomePage() {
       {(below || worst || pendingItems.length > 0) && (
         <section aria-label="Avisos" className="mt-4 grid gap-3 md:grid-cols-2">
           {below && (
-            <AlertCard tone="critical" icon={TriangleAlert} to="/prevision" action="Ver previsión" title={`Tu saldo bajaría a ${formatMoney(below.balance)}`}>
-              El {formatDate(below.date)}, por debajo del umbral de {formatMoney(forecast.data!.threshold)}
+            <AlertCard
+              tone="critical"
+              icon={TriangleAlert}
+              to="/prevision"
+              action="Ver previsión"
+              title={below.date <= today ? "Tu saldo ya está por debajo del umbral" : `Tu saldo bajaría a ${formatMoney(below.balance)}`}
+            >
+              {below.date <= today
+                ? `El umbral de aviso es ${formatMoney(forecast.data!.threshold)}`
+                : `El ${formatDate(below.date)}, por debajo del umbral de ${formatMoney(forecast.data!.threshold)}`}
             </AlertCard>
           )}
           {worst && (

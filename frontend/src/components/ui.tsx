@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { LoaderCircle, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, LoaderCircle, type LucideIcon, X } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef } from "react";
 
 export function Spinner({ className }: { className?: string }) {
@@ -19,6 +19,24 @@ export function Skeleton({ className }: { className?: string }) {
   return <div className={clsx("animate-pulse rounded-control bg-surface-2", className)} aria-hidden />;
 }
 
+/** Forma típica de una página (título, tarjetas de cifras y un bloque) mientras carga. */
+export function PageSkeleton({ stats = 3 }: { stats?: number }) {
+  return (
+    <div aria-busy aria-label="Cargando">
+      <Skeleton className="mb-2 h-8 w-56" />
+      <Skeleton className="mb-7 h-4 w-80 max-w-full" />
+      {stats > 0 && (
+        <div className="mb-5 grid gap-4 sm:grid-cols-3">
+          {Array.from({ length: stats }, (_, i) => (
+            <Skeleton key={i} className="h-28 rounded-card" />
+          ))}
+        </div>
+      )}
+      <Skeleton className="h-80 rounded-card" />
+    </div>
+  );
+}
+
 /** Lista de filas grises mientras carga. */
 export function ListSkeleton({ rows = 6, className }: { rows?: number; className?: string }) {
   return (
@@ -33,6 +51,23 @@ export function ListSkeleton({ rows = 6, className }: { rows?: number; className
           <Skeleton className="h-4 w-16" />
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Cápsula con el mes y flechas para ir al anterior o al siguiente. */
+export function MonthSwitcher({ label, onPrev, onNext }: { label: ReactNode; onPrev: () => void; onNext: () => void }) {
+  return (
+    <div className="card flex items-center rounded-control p-0.5">
+      <button className="btn-ghost p-2" onClick={onPrev} aria-label="Mes anterior">
+        <ChevronLeft className="size-4" />
+      </button>
+      <span className="min-w-32 text-center text-sm font-semibold first-letter:uppercase" aria-live="polite">
+        {label}
+      </span>
+      <button className="btn-ghost p-2" onClick={onNext} aria-label="Mes siguiente">
+        <ChevronRight className="size-4" />
+      </button>
     </div>
   );
 }
@@ -249,6 +284,39 @@ export function ConfirmDialog({
     >
       <div className="text-sm text-fg-muted">{message}</div>
     </Modal>
+  );
+}
+
+const NOTICE_TONES = {
+  critical: { box: "bg-danger-soft", icon: "text-danger" },
+  warning: { box: "bg-warning-soft", icon: "text-warning" },
+  positive: { box: "bg-positive-soft", icon: "text-positive" },
+  info: { box: "bg-accent-soft", icon: "text-accent-text" },
+} as const;
+
+/** Mensaje destacado dentro de una página (aviso, confirmación, explicación). */
+export function Notice({
+  tone,
+  icon: I,
+  title,
+  children,
+  className,
+}: {
+  tone: keyof typeof NOTICE_TONES;
+  icon: LucideIcon;
+  title?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+}) {
+  const t = NOTICE_TONES[tone];
+  return (
+    <div className={clsx("flex gap-3 rounded-card p-4 text-sm", t.box, className)} role={tone === "critical" ? "alert" : undefined}>
+      <I className={clsx("mt-px size-5 shrink-0", t.icon)} aria-hidden />
+      <div className="min-w-0">
+        {title && <p className="font-semibold">{title}</p>}
+        {children && <div className={clsx(title && "mt-0.5", "text-fg-muted")}>{children}</div>}
+      </div>
+    </div>
   );
 }
 

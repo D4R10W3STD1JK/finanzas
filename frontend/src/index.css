@@ -181,6 +181,16 @@
 @utility amount {
   @apply tabular-nums whitespace-nowrap;
 }
+/* Tarjetas de cifras: rótulo pequeño y número grande, como en Inicio. */
+@utility stat-label {
+  @apply text-[13px] font-medium text-fg-muted;
+}
+@utility stat-value {
+  @apply mt-2.5 mb-2 text-[1.625rem] leading-none font-bold tracking-[-0.03em] tabular-nums whitespace-nowrap;
+}
+@utility card-title {
+  @apply text-[15px] font-semibold tracking-tight;
+}
 @utility link {
   @apply font-semibold text-accent-text hover:underline;
 }

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { ChevronLeft, ChevronRight, Funnel, Paperclip, Plus, Receipt, Repeat, Search, X } from "lucide-react";
+import { Funnel, Paperclip, Plus, Receipt, Repeat, Search, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router";
 import { type TransactionFilters, useAccounts, useCategories, useTags, useTransactions } from "../api/hooks";
@@ -7,7 +7,7 @@ import type { Transaction, TransactionKind } from "../api/types";
 import { Amount } from "../components/amount";
 import { IconBadge } from "../components/icons";
 import { AccountSelect, DateInput } from "../components/inputs";
-import { EmptyState, ListSkeleton, PageHeader, Spinner } from "../components/ui";
+import { EmptyState, ListSkeleton, MonthSwitcher, PageHeader, Spinner } from "../components/ui";
 import { formatDateShort, formatMoney, formatMonth, monthRange, relativeDay, todayISO } from "../lib/format";
 import TransactionForm from "./TransactionForm";
 
@@ -140,17 +140,7 @@ export default function TransactionsPage() {
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         {!usingRange && (
-          <div className="card flex items-center rounded-control p-0.5">
-            <button className="btn-ghost p-2" onClick={() => setMonthOffset(monthOffset - 1)} aria-label="Mes anterior">
-              <ChevronLeft className="size-4" />
-            </button>
-            <span className="min-w-32 text-center text-sm font-semibold capitalize" aria-live="polite">
-              {formatMonth(month.from)}
-            </span>
-            <button className="btn-ghost p-2" onClick={() => setMonthOffset(monthOffset + 1)} aria-label="Mes siguiente">
-              <ChevronRight className="size-4" />
-            </button>
-          </div>
+          <MonthSwitcher label={formatMonth(month.from)} onPrev={() => setMonthOffset(monthOffset - 1)} onNext={() => setMonthOffset(monthOffset + 1)} />
         )}
         <div className="relative min-w-48 flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-fg-subtle" aria-hidden />
