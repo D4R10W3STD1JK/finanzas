@@ -122,7 +122,7 @@ Las transferencias y los ajustes de saldo nunca cuentan como ingreso ni como gas
   - Si eliges el día 31, en los meses cortos se usa el último día. Al mes siguiente vuelve al 31, sin ir desplazándose.
 - **Fin de semana o festivo:**
   - Puede moverse al día hábil anterior o al siguiente.
-  - Usa los festivos del país y la región de cada usuario, que se eligen al crear la cuenta (se propone el país del navegador) y se cambian en **Ajustes → Festivos**. Al cambiarlos se recolocan los pagos previstos; los confirmados no cambian. Los usuarios creados desde Ajustes o la terminal empiezan con los de `HOLIDAYS_COUNTRY` y `HOLIDAYS_SUBDIV` en `.env` (por defecto, España sin región: solo festivos nacionales).
+  - Usa los festivos del país y la región de cada usuario, que se eligen al crear la cuenta (por defecto, España) y se cambian en **Ajustes → Festivos**. Al cambiarlos se recolocan los pagos previstos; los confirmados no cambian. Los usuarios creados desde Ajustes o la terminal empiezan con los de `HOLIDAYS_COUNTRY` y `HOLIDAYS_SUBDIV` en `.env` (por defecto, España sin región: solo festivos nacionales).
 - **Importe fijo:** se confirma solo al llegar su fecha. Se puede desactivar en cada serie.
 - **Importe variable** (como la luz): queda **pendiente** en el Inicio hasta que confirmas el importe real.
 - **Editar una ocurrencia:** cambia solo esa y la deja en modo manual (ya no se confirma sola). Con «Volver a los valores de la serie» se deshace.

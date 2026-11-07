@@ -1,5 +1,7 @@
+import { Globe, MapPin } from "lucide-react";
 import { useMemo } from "react";
 import { useHolidayRegions } from "../api/hooks";
+import { Combobox } from "./Combobox";
 import { Field } from "./ui";
 
 export type Region = { country: string; subdiv: string | null };
@@ -20,17 +22,10 @@ function countryName(code: string): string {
   }
 }
 
-/** Región que se propone a quien crea una cuenta: la del navegador si se conoce, si no la de la instalación. */
+/** Región que se propone a quien crea una cuenta: la de la instalación (.env), por defecto España. */
 export function useSuggestedRegion(): Region | null {
   const { data } = useHolidayRegions();
-  return useMemo(() => {
-    if (!data) return null;
-    const fromBrowser = navigator.languages
-      .map((l) => l.split("-")[1]?.toUpperCase())
-      .find((c) => c && data.countries.some((x) => x.code === c));
-    const country = fromBrowser ?? data.default_country;
-    return { country, subdiv: country === data.default_country ? (data.default_subdiv ?? null) : null };
-  }, [data]);
+  return useMemo(() => (data ? { country: data.default_country, subdiv: data.default_subdiv ?? null } : null), [data]);
 }
 
 /** País y región cuyos festivos se usan para mover los pagos recurrentes a día hábil. */
@@ -40,33 +35,42 @@ export function HolidayRegionPicker({ value, onChange }: { value: Region; onChan
     () => (data?.countries ?? []).map((c) => ({ ...c, name: countryName(c.code) })).sort((a, b) => a.name.localeCompare(b.name, "es")),
     [data],
   );
+  const countryOptions = useMemo(() => countries.map((c) => ({ value: c.code, label: c.name })), [countries]);
   const subdivisions = countries.find((c) => c.code === value.country)?.subdivisions ?? [];
+  const regionOptions = useMemo(
+    () => [
+      { value: "", label: "Solo festivos nacionales", hint: "Sin los festivos propios de una región" },
+      ...subdivisions.map((s) => ({ value: s.code, label: s.name })),
+    ],
+    [subdivisions],
+  );
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="space-y-4">
       <Field label="País">
         {(id) => (
-          <select id={id} className="input" value={value.country} disabled={!data} onChange={(e) => onChange({ country: e.target.value, subdiv: null })}>
-            {!data && <option value={value.country}>{countryName(value.country)}</option>}
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <Combobox
+            id={id}
+            value={value.country}
+            options={data ? countryOptions : [{ value: value.country, label: countryName(value.country) }]}
+            onChange={(country) => onChange({ country, subdiv: null })}
+            icon={<Globe className="size-4" aria-hidden />}
+            searchPlaceholder="Buscar país…"
+            disabled={!data}
+          />
         )}
       </Field>
       {subdivisions.length > 0 && (
         <Field label="Región">
           {(id) => (
-            <select id={id} className="input" value={value.subdiv ?? ""} onChange={(e) => onChange({ ...value, subdiv: e.target.value || null })}>
-              <option value="">Solo festivos nacionales</option>
-              {subdivisions.map((s) => (
-                <option key={s.code} value={s.code}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
+            <Combobox
+              id={id}
+              value={value.subdiv ?? ""}
+              options={regionOptions}
+              onChange={(subdiv) => onChange({ ...value, subdiv: subdiv || null })}
+              icon={<MapPin className="size-4" aria-hidden />}
+              searchPlaceholder="Buscar región…"
+            />
           )}
         </Field>
       )}

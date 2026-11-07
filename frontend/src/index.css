@@ -207,3 +207,16 @@ select.input {
   background-position: right 0.75rem center;
   background-size: 1rem;
 }
+
+/* Apertura de los desplegables (Combobox). */
+@keyframes combo-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-[combo-in"] {
+    animation: none;
+  }
+}
