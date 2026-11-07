@@ -1,11 +1,11 @@
 """Utilidades de línea de comandos.
 
     docker compose exec backend python -m app.cli create-user Ana
-    docker compose exec backend python -m app.cli reset-password Ronald
+    docker compose exec backend python -m app.cli reset-password Ana
     docker compose exec backend python -m app.cli seed-demo --usuario Ana
     docker compose exec backend python -m app.cli run-jobs
-    docker compose exec -T backend python -m app.cli export --usuario Ronald > finanzas.json
-    docker compose exec -T backend python -m app.cli import --usuario Ronald < finanzas.json
+    docker compose exec -T backend python -m app.cli export --usuario Ana > finanzas.json
+    docker compose exec -T backend python -m app.cli import --usuario Ana < finanzas.json
 
 Cada usuario tiene sus propios datos. `--usuario` se puede omitir si solo hay uno.
 """

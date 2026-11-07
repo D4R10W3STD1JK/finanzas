@@ -6,8 +6,12 @@ from sqlalchemy import func, select
 from app.api.deps import DB, CurrentUser
 from app.config import get_settings
 from app.models import User
-from app.schemas.core import AuthOptionsOut, ChangePasswordIn, LoginIn, UserCreateIn, UserOut
+from app.domain.calendar_es import supported_regions
+from app.schemas.core import AuthOptionsOut, ChangePasswordIn, LoginIn, RegisterIn, UserOut
+from app.schemas.settings import HolidayRegion, HolidayRegionsOut
 from app.services import users
+from app.services.settings import check_region, get_app_settings, update_app_settings
+from app.tenancy import as_user
 from app.security import COOKIE_NAME, create_session_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -37,16 +41,33 @@ def login(data: LoginIn, response: Response, db: DB):
     return user
 
 
+def _has_users(db) -> bool:
+    return bool(db.scalar(select(func.count()).select_from(User)))
+
+
 @router.get("/options", response_model=AuthOptionsOut)
-def options():
+def options(db: DB):
     """Lo que la pantalla de entrada necesita saber antes de iniciar sesión."""
-    return {"registration_open": get_settings().allow_registration}
+    has_users = _has_users(db)
+    # La primera cuenta se puede crear siempre; si no, nadie podría entrar en una instalación nueva.
+    return {"registration_open": get_settings().allow_registration or not has_users, "has_users": has_users}
+
+
+@router.get("/holiday-regions", response_model=HolidayRegionsOut)
+def holiday_regions():
+    """Países y regiones con calendario de festivos (para elegirlos al crear la cuenta o en Ajustes)."""
+    env = get_settings()
+    countries = [
+        {"code": code, "subdivisions": [{"code": c, "name": n} for c, n in subdivs]}
+        for code, subdivs in supported_regions().items()
+    ]
+    return {"countries": countries, "default_country": env.holidays_country, "default_subdiv": env.holidays_subdiv or None}
 
 
 @router.post("/register", response_model=UserOut, status_code=201)
-def register(data: UserCreateIn, request: Request, response: Response, db: DB):
+def register(data: RegisterIn, request: Request, response: Response, db: DB):
     """Crea un usuario nuevo, con sus propias finanzas, e inicia su sesión."""
-    if not get_settings().allow_registration:
+    if not get_settings().allow_registration and _has_users(db):
         raise HTTPException(status.HTTP_403_FORBIDDEN, "El registro de usuarios nuevos está desactivado")
     # Freno a la creación masiva de cuentas: unas pocas por hora desde cada dirección.
     ip = request.client.host if request.client else "?"
@@ -54,7 +75,14 @@ def register(data: UserCreateIn, request: Request, response: Response, db: DB):
     recent = [t for t in _registrations.get(ip, []) if now - t < 3600]
     if len(recent) >= _MAX_REGISTRATIONS_PER_HOUR:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "Se han creado demasiadas cuentas seguidas. Prueba más tarde.")
+    region = None
+    if data.holidays_country:
+        region = HolidayRegion(holidays_country=data.holidays_country, holidays_subdiv=data.holidays_subdiv)
+        check_region(region)
     user = users.create_user(db, data.username, data.password)
+    if region:
+        with as_user(db, user.id):
+            update_app_settings(db, get_app_settings(db).model_copy(update=region.model_dump()))
     _registrations[ip] = [*recent, now]
     _start_session(response, user)
     return user

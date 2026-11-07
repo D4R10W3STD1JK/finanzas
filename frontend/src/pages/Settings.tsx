@@ -3,6 +3,7 @@ import { type FormEvent, useState } from "react";
 import { useAppSettings, useChangePassword, useCreateUser, useDeleteTag, useMe, useSaveSettings, useSaveTag, useTags, useUsers } from "../api/hooks";
 import type { Tag } from "../api/types";
 import DataTransferCard from "../components/DataTransfer";
+import { HolidayRegionPicker, type Region } from "../components/HolidayRegion";
 import { ColorPicker, MoneyInput } from "../components/inputs";
 import { Checkbox, ConfirmDialog, ErrorBox, Field, Modal, PageHeader, Spinner } from "../components/ui";
 
@@ -261,6 +262,41 @@ function ForecastSettingsCard() {
   );
 }
 
+function HolidaysCard() {
+  const { data } = useAppSettings();
+  const save = useSaveSettings();
+  const [chosen, setChosen] = useState<Region | null>(null);
+  if (!data) return null;
+  const value = chosen ?? { country: data.holidays_country, subdiv: data.holidays_subdiv ?? null };
+
+  return (
+    <div className="card space-y-4 p-4">
+      <div>
+        <h2 className="font-semibold">Festivos</h2>
+        <p className="mt-1 text-sm text-fg-subtle">
+          Los recurrentes que se mueven a día hábil evitan los fines de semana y los festivos de aquí. Al cambiarlo se recolocan los pagos previstos; los ya confirmados no cambian.
+        </p>
+      </div>
+      <HolidayRegionPicker value={value} onChange={setChosen} />
+      <ErrorBox error={save.error} />
+      {save.isSuccess && chosen === null && (
+        <p className="flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
+          <Check className="size-4" /> Guardado
+        </p>
+      )}
+      <button
+        className="btn-primary"
+        disabled={chosen === null || save.isPending}
+        onClick={() =>
+          save.mutate({ ...data, holidays_country: value.country, holidays_subdiv: value.subdiv }, { onSuccess: () => setChosen(null) })
+        }
+      >
+        Guardar festivos
+      </button>
+    </div>
+  );
+}
+
 export default function SettingsPage() {
   const { data: me } = useMe();
   return (
@@ -268,6 +304,7 @@ export default function SettingsPage() {
       <PageHeader title="Ajustes" subtitle={me ? `Sesión iniciada como ${me.username}` : undefined} />
       <div className="grid gap-6 lg:grid-cols-2">
         <ForecastSettingsCard />
+        <HolidaysCard />
         <PasswordCard />
         <UsersCard />
         <TagsCard />

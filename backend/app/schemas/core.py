@@ -21,11 +21,18 @@ class UserOut(Schema):
 
 class AuthOptionsOut(Schema):
     registration_open: bool
+    has_users: bool
 
 
 class UserCreateIn(Schema):
     username: str = Field(min_length=2, max_length=50, pattern=r"^\S(.*\S)?$")
     password: str = Field(min_length=8)
+
+
+class RegisterIn(UserCreateIn):
+    # Festivos para mover los pagos a día hábil; si no se indican, los de la instalación.
+    holidays_country: str | None = None
+    holidays_subdiv: str | None = None
 
 
 class ChangePasswordIn(Schema):

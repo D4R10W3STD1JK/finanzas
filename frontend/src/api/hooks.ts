@@ -125,11 +125,14 @@ export const useLogin = () => {
 export const useAuthOptions = () =>
   useQuery({ queryKey: ["auth-options"], queryFn: () => unwrap(api.GET("/api/auth/options")), staleTime: Infinity });
 
+export const useHolidayRegions = () =>
+  useQuery({ queryKey: ["holiday-regions"], queryFn: () => unwrap(api.GET("/api/auth/holiday-regions")), staleTime: Infinity });
+
 /** Crea la cuenta e inicia sesión con ella, igual que useLogin. */
 export const useRegister = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: S["UserCreateIn"]) => unwrap(api.POST("/api/auth/register", { body })),
+    mutationFn: (body: S["RegisterIn"]) => unwrap(api.POST("/api/auth/register", { body })),
     onSuccess: (user) => {
       qc.setQueryData(["me"], user);
       qc.removeQueries({ predicate: (q) => q.queryKey[0] !== "me" });

@@ -16,7 +16,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from app.config import get_settings
-from app.domain.calendar_es import get_calendar
 from app.domain.recurrence import build_schedule, clamp_day, step_of
 from app.models import (
     AmountMode,
@@ -31,6 +30,7 @@ from app.schemas.recurring import ConfirmIn, NewVersionIn, OccurrencePatch, Seri
 from app.services import attachments
 from app.services.errors import Conflict, Invalid, NotFound
 from app.services.refs import check_category, check_transfer_accounts, load_tags
+from app.services.settings import user_calendar
 
 _SERIES_LOAD = (
     selectinload(RecurringSeries.versions).selectinload(RecurringVersion.tags),
@@ -84,8 +84,7 @@ def _apply_terms(db: Session, version: RecurringVersion, kind: TransactionKind, 
 def sync_series(db: Session, series: RecurringSeries, today: date) -> None:
     """Crea, actualiza o elimina ocurrencias previstas para que cuadren con las versiones."""
     db.flush()
-    settings = get_settings()
-    cal = get_calendar(settings.holidays_country, settings.holidays_subdiv)
+    cal = user_calendar(db)
     versions = list(series.versions)
     schedule = build_schedule(
         [(i, v.rule()) for i, v in enumerate(versions)],

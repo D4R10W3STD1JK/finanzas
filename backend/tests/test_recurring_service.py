@@ -112,6 +112,24 @@ def test_ajuste_a_dia_habil_conserva_fecha_teorica(db, bank, cat):
     assert first.due_date == date(2026, 10, 13)
 
 
+def test_festivos_de_cada_usuario(db, bank, cat):
+    """El 9 de octubre es festivo en la Comunitat Valenciana pero no en Madrid."""
+    from app.services.settings import get_app_settings, update_app_settings
+
+    s = new_series(db, bank.id, cat("Alquiler"), date(2026, 10, 9), business_day_adjust=BusinessDayAdjust.NEXT)
+    assert s.occurrences[0].due_date == date(2026, 10, 13)
+
+    prefs = get_app_settings(db)
+    assert (prefs.holidays_country, prefs.holidays_subdiv) == ("ES", "VC")  # los de .env hasta que elija
+    update_app_settings(db, prefs.model_copy(update={"holidays_subdiv": "MD"}))
+    assert svc.get_series(db, s.id).occurrences[0].due_date == date(2026, 10, 9)
+
+    with pytest.raises(Invalid):
+        update_app_settings(db, prefs.model_copy(update={"holidays_country": "XX"}))
+    with pytest.raises(Invalid):
+        update_app_settings(db, prefs.model_copy(update={"holidays_subdiv": "ZZ"}))
+
+
 def test_cambio_a_partir_de_fecha_conserva_historico(db, bank, cat):
     """Subida del alquiler desde abril: lo confirmado y lo editado a mano no cambia."""
     s = new_series(db, bank.id, cat("Alquiler"), date(2026, 1, 1), include_past=True, amount="800.00")

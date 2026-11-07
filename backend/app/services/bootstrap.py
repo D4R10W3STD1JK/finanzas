@@ -14,10 +14,16 @@ log = logging.getLogger(__name__)
 
 
 def ensure_admin_user(db: Session) -> None:
-    """Crea el usuario de .env si aún no hay ninguno. Después la contraseña se cambia desde la app."""
+    """Crea el usuario inicial de .env (opcional) si aún no hay ninguno.
+
+    Sin ADMIN_USERNAME/ADMIN_PASSWORD no se crea nadie: la primera cuenta se crea desde la pantalla de entrada.
+    """
     if db.scalar(select(func.count()).select_from(User)):
         return
     settings = get_settings()
+    if not (settings.admin_username.strip() and settings.admin_password):
+        log.info("Aún no hay usuarios: crea la primera cuenta desde la pantalla de entrada")
+        return
     create_user(db, settings.admin_username, settings.admin_password)
     log.info("Usuario inicial '%s' creado", settings.admin_username)
 

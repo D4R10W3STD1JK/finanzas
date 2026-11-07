@@ -58,6 +58,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/holiday-regions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Holiday Regions
+         * @description Países y regiones con calendario de festivos (para elegirlos al crear la cuenta o en Ajustes).
+         */
+        get: operations["holiday_regions_api_auth_holiday_regions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/register": {
         parameters: {
             query?: never;
@@ -964,6 +984,10 @@ export interface components {
         AmountMode: "fixed" | "variable";
         /** AppSettings */
         "AppSettings-Input": {
+            /** Holidays Country */
+            holidays_country: string;
+            /** Holidays Subdiv */
+            holidays_subdiv?: string | null;
             /** Low Balance Threshold */
             low_balance_threshold: number | string;
             /** Forecast Include Variable */
@@ -971,6 +995,10 @@ export interface components {
         };
         /** AppSettings */
         "AppSettings-Output": {
+            /** Holidays Country */
+            holidays_country: string;
+            /** Holidays Subdiv */
+            holidays_subdiv?: string | null;
             /** Low Balance Threshold */
             low_balance_threshold: string;
             /** Forecast Include Variable */
@@ -996,6 +1024,8 @@ export interface components {
         AuthOptionsOut: {
             /** Registration Open */
             registration_open: boolean;
+            /** Has Users */
+            has_users: boolean;
         };
         /** BalancePoint */
         BalancePoint: {
@@ -1509,6 +1539,22 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HolidayCountryOut */
+        HolidayCountryOut: {
+            /** Code */
+            code: string;
+            /** Subdivisions */
+            subdivisions: components["schemas"]["SubdivisionOut"][];
+        };
+        /** HolidayRegionsOut */
+        HolidayRegionsOut: {
+            /** Countries */
+            countries: components["schemas"]["HolidayCountryOut"][];
+            /** Default Country */
+            default_country: string;
+            /** Default Subdiv */
+            default_subdiv: string | null;
+        };
         /** LoginIn */
         LoginIn: {
             /** Username */
@@ -1720,6 +1766,17 @@ export interface components {
             /** Net Monthly */
             net_monthly: string;
         };
+        /** RegisterIn */
+        RegisterIn: {
+            /** Username */
+            username: string;
+            /** Password */
+            password: string;
+            /** Holidays Country */
+            holidays_country?: string | null;
+            /** Holidays Subdiv */
+            holidays_subdiv?: string | null;
+        };
         /** SeriesDetail */
         SeriesDetail: {
             /** Id */
@@ -1839,6 +1896,13 @@ export interface components {
             max_occurrences?: number | null;
             /** Notes */
             notes?: string | null;
+        };
+        /** SubdivisionOut */
+        SubdivisionOut: {
+            /** Code */
+            code: string;
+            /** Name */
+            name: string;
         };
         /** TagIn */
         TagIn: {
@@ -2149,6 +2213,26 @@ export interface operations {
             };
         };
     };
+    holiday_regions_api_auth_holiday_regions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HolidayRegionsOut"];
+                };
+            };
+        };
+    };
     register_api_auth_register_post: {
         parameters: {
             query?: never;
@@ -2158,7 +2242,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UserCreateIn"];
+                "application/json": components["schemas"]["RegisterIn"];
             };
         };
         responses: {

@@ -135,8 +135,12 @@ def test_provisiones(db, make_account, cat):
 
 
 def test_preferencias_y_endpoints(auth_client):
-    assert auth_client.get("/api/settings").json() == {"low_balance_threshold": "0.00", "forecast_include_variable": True}
-    r = auth_client.put("/api/settings", json={"low_balance_threshold": "250", "forecast_include_variable": False})
+    assert auth_client.get("/api/settings").json() == {
+        "low_balance_threshold": "0.00", "forecast_include_variable": True, "holidays_country": "ES", "holidays_subdiv": "VC",
+    }
+    r = auth_client.put("/api/settings", json={
+        "low_balance_threshold": "250", "forecast_include_variable": False, "holidays_country": "ES", "holidays_subdiv": "VC",
+    })
     assert r.json()["low_balance_threshold"] == "250.00"
     f = auth_client.get("/api/reports/forecast", params={"months": 6}).json()
     assert f["months"] == 6 and f["threshold"] == "250.00" and f["include_variable"] is False

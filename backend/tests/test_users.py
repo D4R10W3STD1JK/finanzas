@@ -45,7 +45,7 @@ def test_crear_usuario_desde_la_app(auth_client, db):
 def test_registro_desde_la_pantalla_de_entrada(client, db, monkeypatch):
     from app import config
 
-    assert client.get("/api/auth/options").json() == {"registration_open": True}
+    assert client.get("/api/auth/options").json() == {"registration_open": True, "has_users": True}
     r = client.post("/api/auth/register", json={"username": "Luis", "password": "clave-luis1"})
     assert r.status_code == 201 and r.json()["username"] == "Luis"
     # Queda con la sesión iniciada y con sus propias finanzas
@@ -63,8 +63,53 @@ def test_registro_desde_la_pantalla_de_entrada(client, db, monkeypatch):
 
     # Registro desactivado en .env
     monkeypatch.setattr(config.get_settings(), "allow_registration", False)
-    assert client.get("/api/auth/options").json() == {"registration_open": False}
+    assert client.get("/api/auth/options").json() == {"registration_open": False, "has_users": True}
     assert client.post("/api/auth/register", json={"username": "Otra", "password": "clave-otra1"}).status_code == 403
+
+
+def _sin_usuarios(db):
+    from sqlalchemy import delete, text
+
+    from app.models import User
+
+    db.execute(text("SET LOCAL session_replication_role = replica"))  # sin comprobar claves ajenas
+    db.execute(delete(User))
+    db.execute(text("SET LOCAL session_replication_role = DEFAULT"))
+    db.commit()
+
+
+def test_instalacion_nueva_sin_usuario_inicial(client, db, monkeypatch):
+    """Sin ADMIN_USERNAME/ADMIN_PASSWORD no se crea nadie y la primera cuenta se crea desde la pantalla de entrada."""
+    from app import config
+    from app.models import User
+    from app.services.bootstrap import ensure_admin_user
+
+    _sin_usuarios(db)
+    monkeypatch.setattr(config.get_settings(), "admin_username", "")
+    monkeypatch.setattr(config.get_settings(), "admin_password", "")
+    ensure_admin_user(db)
+    assert count(db, User) == 0
+
+    # Aunque el registro esté desactivado, la primera cuenta se puede crear
+    monkeypatch.setattr(config.get_settings(), "allow_registration", False)
+    assert client.get("/api/auth/options").json() == {"registration_open": True, "has_users": False}
+    assert client.post("/api/auth/register", json={"username": "Marta", "password": "clave-marta1"}).status_code == 201
+    assert client.get("/api/auth/options").json() == {"registration_open": False, "has_users": True}
+    assert client.post("/api/auth/register", json={"username": "Otra", "password": "clave-otra1"}).status_code == 403
+
+
+def test_usuario_inicial_desde_env(db, monkeypatch):
+    from app import config
+    from app.models import User
+    from app.services.bootstrap import ensure_admin_user
+    from app.services.users import find_user
+
+    _sin_usuarios(db)
+    monkeypatch.setattr(config.get_settings(), "admin_username", "Marta")
+    monkeypatch.setattr(config.get_settings(), "admin_password", "clave-marta1")
+    ensure_admin_user(db)
+    ensure_admin_user(db)  # solo la primera vez
+    assert count(db, User) == 1 and find_user(db, "marta") is not None
 
 
 def test_cada_usuario_ve_solo_lo_suyo(auth_client, db, make_account, expense_cat):
@@ -174,3 +219,24 @@ def test_tareas_periodicas_de_todos_los_usuarios(db, make_account, expense_cat):
     assert concepts == {"Gimnasio de Ronald"}
     with as_user(db, ana.id):
         assert set(db.scalars(select(Transaction.concept))) == {"Gimnasio de Ana"}
+
+
+def test_festivos_al_crear_la_cuenta(client, db):
+    regions = client.get("/api/auth/holiday-regions").json()
+    es = next(c for c in regions["countries"] if c["code"] == "ES")
+    assert {"code": "VC", "name": "Comunitat Valenciana"} in es["subdivisions"]
+    assert {"code": "MD", "name": "Madrid"} in es["subdivisions"]
+    assert regions["default_country"] == "ES"
+
+    # Región no válida: no se crea la cuenta
+    r = client.post("/api/auth/register", json={"username": "Pau", "password": "clave-pau1", "holidays_country": "ES", "holidays_subdiv": "ZZ"})
+    assert r.status_code == 422
+    r = client.post("/api/auth/register", json={"username": "Pau", "password": "clave-pau1", "holidays_country": "fr", "holidays_subdiv": ""})
+    assert r.status_code == 201
+    s = client.get("/api/settings").json()
+    assert (s["holidays_country"], s["holidays_subdiv"]) == ("FR", None)
+
+    # Sin indicarlos, los de la instalación
+    client.post("/api/auth/register", json={"username": "Eva", "password": "clave-eva1"})
+    s = client.get("/api/settings").json()
+    assert (s["holidays_country"], s["holidays_subdiv"]) == ("ES", "VC")
